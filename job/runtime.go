@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"go.opencensus.io/trace"
 )
 
@@ -14,9 +14,6 @@ type Runtime interface {
 	// It is not required for jobs to call this unless they need to update state
 	// during a run.  When a job completes, the state is always updated.
 	Update(ctx context.Context, opts ...SnapshotOpt) error
-
-	// Log returns a logging channel for this job.
-	Log() log.FieldLogger
 
 	// ID returns the unique job id.
 	ID() string
@@ -28,7 +25,7 @@ func Run(ctx context.Context, rec Record) error {
 	defer span.End()
 	span.AddAttributes(trace.StringAttribute("job_id", rec.JobID()))
 
-	ll := log.WithField("id", rec.JobID())
+	ll := log.With().Str("id", rec.JobID()).Logger()
 
 	snap, err := rec.LastSnapshot(ctx)
 	if err != nil {
@@ -45,14 +42,14 @@ func Run(ctx context.Context, rec Record) error {
 
 	rt := &runtime{
 		rec: rec,
-		ll:  ll,
 		run: run,
 	}
+	ll.Info().Msg("starting job")
 	err = run.Run(ctx, rt)
 
 	var final bool
 	if _, unrec := err.(UnrecoverableError); unrec || err == nil {
-		ll.Info("finalizing job")
+		ll.Info().Msg("finalizing job")
 		final = true
 	}
 
@@ -66,16 +63,10 @@ func Run(ctx context.Context, rec Record) error {
 // runtime implements the Runtime API for the sql store.
 type runtime struct {
 	rec Record
-	ll  log.FieldLogger
 	run Runnable
 }
 
 var _ Runtime = &runtime{}
-
-// Log returns a logger for this job.
-func (s *runtime) Log() log.FieldLogger {
-	return s.ll
-}
 
 // ID returns the job id.
 func (s *runtime) ID() string {

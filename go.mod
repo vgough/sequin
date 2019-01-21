@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.16.22 // indirect
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/census-instrumentation/opencensus-proto v0.1.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20190121005146-b04fd42d9952 // indirect
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
@@ -23,7 +24,6 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/rs/zerolog v1.11.0
 	github.com/satori/go.uuid v1.2.0
-	github.com/sirupsen/logrus v1.3.0
 	github.com/stretchr/testify v1.3.0
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0 // indirect
 	go.opencensus.io v0.18.1-0.20181204023538-aab39bd6a98b

@@ -2,8 +2,6 @@ package workflow
 
 import (
 	"context"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Workflow is an instance of a workflow.
@@ -15,28 +13,12 @@ type Workflow interface {
 	Run(ctx context.Context, r Runtime)
 }
 
-// NewJob wraps a workflow as a runnable job. Use this to schedule and run
-// workflows with job.Scheduler.
-//
-// Note that the type passed as Workflow must be registered with encoding/gob.
-// Call "gob.Register(&MyType{})" in an init function to register the concrete
-// types.
-func NewJob(name string, wf Workflow) *JobWrapper {
-	return &JobWrapper{
-		Name:     name,
-		Workflow: wf,
-	}
-}
-
 // OpFN is shorthand for a workflow operation function.
 type OpFN func()
 
 // Runtime provides access to runtime operations for workflows.
 // This is provided to the workflow instance when it is run.
 type Runtime interface {
-	// Log returns a logging channel for the current stage.
-	Log() log.FieldLogger
-
 	// ID returns the unique job id.
 	ID() string
 
@@ -49,7 +31,7 @@ type Runtime interface {
 	// idempotent, and result in the same state over multiple calls.
 	Do(fn OpFN, opts ...Opt)
 
-	// Embed add a new workflow as a step in the current workflow.
+	// Embed adds a new workflow as a step in the current workflow.
 	Embed(wf Workflow, opts ...Opt)
 
 	// OnRollback registers a rollback operation, which will only be executed if

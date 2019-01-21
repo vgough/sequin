@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/vgough/sequin/job"
 )
@@ -16,7 +17,7 @@ type simpleJob struct {
 }
 
 func (a *simpleJob) Run(ctx context.Context, r job.Runtime) error {
-	r.Log().Info("simpleJob running!")
+	log.Ctx(ctx).Info().Msg("simpleJob running!")
 	a.RunCount++
 	return a.Result
 }

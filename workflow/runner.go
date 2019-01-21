@@ -9,13 +9,26 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/vgough/sequin/job"
 	"go.opencensus.io/trace"
 )
 
 func init() {
 	gob.Register(&JobWrapper{})
+}
+
+// NewRunnable returns a runable for a workflow.
+//
+// Note that the type passed as Workflow must be registered with encoding/gob.
+// Call "gob.Register(&MyType{})" in an init function to register the concrete
+// types.
+func NewRunnable(name string, wf Workflow) job.Runnable {
+	return &JobWrapper{
+		Name:     name,
+		Workflow: wf,
+	}
 }
 
 // JobWrapper implements job.Runnable, allowing workflows to be scheduled
@@ -60,6 +73,8 @@ type ExecContext struct {
 	Children    []*ExecContext
 	MutatedVars []byte
 
+	ll zerolog.Logger
+
 	// Runtime information that is not persisted between runs.
 
 	wf           Workflow
@@ -85,6 +100,7 @@ func (ec *ExecContext) subContext(cfg *runOpts) *ExecContext {
 
 	sc := &ExecContext{
 		Name:         path.Join(ec.Name, cfg.name),
+		ll:           log.With().Str("stage", ec.Name).Logger(),
 		wf:           ec.wf,
 		ctx:          ctx,
 		span:         span,
@@ -107,7 +123,6 @@ func (ec *ExecContext) End() {
 // caught and returned, otherwise errors are left uncaught and must be recovered
 // by the caller.
 func (ec *ExecContext) run(wf Workflow, catchErrors bool) error {
-	ll := ec.Log()
 	return backoff.Retry(func() error {
 		ctx, span := trace.StartSpan(ec.ctx, "workflow.run")
 		defer span.End()
@@ -121,13 +136,13 @@ func (ec *ExecContext) run(wf Workflow, catchErrors bool) error {
 		span.Annotate([]trace.Attribute{
 			trace.StringAttribute("err", err.Error())}, "failed")
 
-		ll.WithError(err).Warn("workflow failed")
+		ec.ll.Warn().Err(err).Msg("workflow failed")
 		if ec.fullRollback || job.IsUnrecoverable(err) {
 			ec.revert()
 		}
 
 		if job.IsUnrecoverable(err) {
-			ll.WithError(err).Error("unrecoverable error")
+			ec.ll.Error().Err(err).Msg("unrecoverable error")
 			return backoff.Permanent(err)
 		}
 
@@ -153,7 +168,7 @@ func (ec *ExecContext) once(ctx context.Context, wf Workflow, catchErrors bool) 
 
 	// Sync state on success.
 	if upErr := ec.runtime.Update(ec.ctx, job.WithDescription(ec.Name)); upErr != nil {
-		log.WithError(upErr).Error("unable to update job")
+		log.Error().Err(upErr).Msg("unable to update job")
 		err = upErr
 	}
 
@@ -161,7 +176,7 @@ func (ec *ExecContext) once(ctx context.Context, wf Workflow, catchErrors bool) 
 }
 
 func (ec *ExecContext) revert() {
-	ec.Log().WithField("num", len(ec.rollbacks)).Debug("rolling back workflow")
+	ec.Log().Debug().Int("num", len(ec.rollbacks)).Msg("rolling back workflow")
 
 	for i := len(ec.rollbacks) - 1; i >= 0; i-- {
 		rollbackFN := ec.rollbacks[i]
@@ -170,8 +185,9 @@ func (ec *ExecContext) revert() {
 }
 
 // Log returns a logging channel for the current stage.
-func (ec *ExecContext) Log() log.FieldLogger {
-	return ec.runtime.Log().WithField("stage", ec.Name)
+func (ec *ExecContext) Log() *zerolog.Logger {
+	ll := log.With().Str("stage", ec.Name).Logger()
+	return &ll
 }
 
 // Context returns the current context.
@@ -193,7 +209,7 @@ func (ec *ExecContext) Do(fn OpFN, opts ...Opt) {
 
 // OnRollback implements the Runtime interface.
 func (ec *ExecContext) OnRollback(fn OpFN) {
-	ec.Log().Debug("adding rollback function")
+	ec.ll.Debug().Msg("adding rollback function")
 	ec.rollbacks = append(ec.rollbacks, fn)
 }
 
@@ -208,14 +224,13 @@ func (ec *ExecContext) Embed(wf Workflow, opts ...Opt) {
 	defer sc.End()
 	err := sc.run(wf, false)
 	if err != nil {
-		ec.Log().WithError(err).Error("embedded workflow failed")
+		ec.ll.Error().Err(err).Msg("embedded workflow failed")
 		ec.Fail(err)
 	}
 }
 
 func (ec *ExecContext) runStage(fn OpFN, cfg *runOpts) {
-	ll := ec.Log()
-	ll.Debug("beginning stage")
+	ec.ll.Debug().Msg("beginning stage")
 
 	if ec.MutatedVars != nil {
 		buf := bytes.NewBuffer(ec.MutatedVars)
@@ -226,13 +241,13 @@ func (ec *ExecContext) runStage(fn OpFN, cfg *runOpts) {
 				ec.Fail(job.Unrecoverable(err))
 			}
 		}
-		ll.Debug("stage cache reused")
+		ec.ll.Debug().Msg("stage cache reused")
 		return
 	}
 
 	if fn != nil {
 		fn()
-		ll.Debug("stage function succeeded")
+		ec.ll.Debug().Msg("stage function succeeded")
 	}
 
 	// Serialize output vars.
@@ -252,7 +267,7 @@ func (ec *ExecContext) runStage(fn OpFN, cfg *runOpts) {
 	if err := ec.runtime.Update(ec.ctx, job.WithDescription(ec.Name)); err != nil {
 		ec.Fail(err)
 	}
-	ll.Debug("stage results stored")
+	ec.ll.Debug().Msg("stage results stored")
 }
 
 // Fail implements the Runtime interface.

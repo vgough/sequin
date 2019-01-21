@@ -4,7 +4,6 @@ import (
 	"container/list"
 	"context"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/vgough/sequin/workflow"
 )
 
@@ -27,10 +26,6 @@ var _ workflow.Runtime = &testRuntime{}
 
 func (run *testRuntime) ID() string {
 	return run.base.ID()
-}
-
-func (run *testRuntime) Log() log.FieldLogger {
-	return run.base.Log()
 }
 
 func (run *testRuntime) Context() context.Context {

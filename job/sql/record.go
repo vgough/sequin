@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/vgough/sequin/job"
 	"go.opencensus.io/trace"
 )
@@ -111,10 +111,8 @@ func (j *StoredJob) AddSnapshot(ctx context.Context, run job.Runnable, opts ...j
 		return errors.Wrapf(err, "unable to create checkpoint for %d", j.ID)
 	}
 
-	log.WithFields(log.Fields{
-		"id":          j.ID,
-		"snapshot_id": snap.ID,
-	}).Info("added state snapshot")
+	log.Info().Uint("id", j.ID).Uint("snapshot_id", snap.ID).
+		Msg("added state snapshot")
 	j.store.notifyLocal(j.ID)
 
 	return nil
@@ -130,10 +128,10 @@ func (j *StoredJob) WaitForUpdate(ctx context.Context, snap job.Snapshot) error 
 		return errors.New("job is final, no updates will occur")
 	}
 
-	ll := log.WithField("id", j.ID)
+	ll := log.With().Uint("id", j.ID).Logger()
 	for {
 		var count int
-		ll.Info("checking for newer snapshots")
+		ll.Info().Msg("checking for newer snapshots")
 		updated := j.store.updateChannel(j.ID)
 
 		if err := j.store.db.Model(&Snapshot{}).

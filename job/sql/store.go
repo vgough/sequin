@@ -10,7 +10,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/karlseguin/rcache"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/vgough/sequin/job"
 	"go.opencensus.io/trace"
 )
@@ -41,7 +41,7 @@ var testDBInit sync.Once
 // NewStore returns a new storage backend.
 func NewStore(db *gorm.DB) *Store {
 	ch := func(key string) interface{} {
-		log.WithField("key", key).Info("creating update channel")
+		log.Info().Str("key", key).Msg("creating update channel")
 		return make(chan struct{})
 	}
 	return &Store{
@@ -52,7 +52,7 @@ func NewStore(db *gorm.DB) *Store {
 
 func getTestDB(t Testing) *gorm.DB {
 	testDBInit.Do(func() {
-		log.Info("constructing global test db")
+		log.Info().Msg("constructing global test db")
 		db, err := gorm.Open("sqlite3", testDBLocation)
 		if err != nil {
 			t.Fatalf("unable to create DB: %s", err)

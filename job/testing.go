@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +14,7 @@ type simpleJob struct {
 }
 
 func (a *simpleJob) Run(ctx context.Context, r Runtime) error {
-	r.Log().Info("simpleJob running!")
+	log.Info().Msg("simpleJob running!")
 	return nil
 }
 

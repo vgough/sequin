@@ -9,8 +9,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	uuid "github.com/satori/go.uuid"
-	log "github.com/sirupsen/logrus"
 	"github.com/vgough/sequin/job"
 )
 
@@ -72,20 +72,20 @@ func (q *Queue) Schedule(ctx context.Context, id string) error {
 	if err := q.db.Create(it).Error; err != nil {
 		return errors.Wrapf(err, "unable to schedule job %s", id)
 	}
-	ll := log.WithField("id", id)
-	ll.Info("scheduled work item")
+	ll := log.With().Str("id", id).Logger()
+	ll.Info().Msg("scheduled work item")
 
 	// Optimistically attempt to have local worker handle it, if one exists.
 	select {
 	case q.local <- it:
-		ll.Info("passed job to local worker")
+		ll.Info().Msg("passed job to local worker")
 	default: // non-blocking, leave it
 	}
 	return nil
 }
 
 func (q *Queue) takeLock(it *WorkItem) error {
-	log.WithField("id", it.StoredJobID).Info("locking work item")
+	log.Info().Uint("id", it.StoredJobID).Msg("locking work item")
 	it.RunnableAt = time.Now().Add(lockTime)
 	oldCount := it.AttemptCount
 	it.AttemptCount++
@@ -99,7 +99,7 @@ func (q *Queue) takeLock(it *WorkItem) error {
 }
 
 func (q *Queue) extendLock(it *WorkItem) error {
-	log.WithField("id", it.StoredJobID).Info("extending work item")
+	log.Info().Uint("id", it.StoredJobID).Msg("extending work item")
 	it.RunnableAt = time.Now().Add(lockTime)
 	return q.db.Model(it).
 		Where("attempt_count = ?", it.AttemptCount).
@@ -124,27 +124,27 @@ func (q *Queue) RunNext(ctx context.Context, f func(w job.Work) error) error {
 				Order("runnable_at").
 				First(&item).Error; err != nil {
 				if !gorm.IsRecordNotFoundError(err) {
-					log.WithError(err).Info("unable to find runnable item")
+					log.Info().Err(err).Msg("unable to find runnable item")
 				}
 				continue
 			}
 			it = &item
 		}
 
-		ll := log.WithField("id", it.StoredJobID)
-		ll.Info("obtained work item")
+		ll := log.With().Uint("id", it.StoredJobID).Logger()
+		ll.Info().Msg("obtained work item")
 
 		// Update item to acquire it.
 		if err := q.takeLock(it); err != nil {
-			log.WithError(err).Warn("unable to lock item")
+			log.Warn().Err(err).Msg("unable to lock item")
 			continue
 		}
 
 		// Start processing.
 		done := make(chan error, 1)
 		go func() {
-			ll.Info("starting job")
-			defer func() { ll.Info("job completed") }()
+			ll.Info().Msg("starting job")
+			defer func() { ll.Info().Msg("job completed") }()
 			done <- f(it)
 		}()
 
@@ -161,7 +161,7 @@ func (q *Queue) RunNext(ctx context.Context, f func(w job.Work) error) error {
 
 			case <-time.After(updateInterval):
 				if err := q.extendLock(it); err != nil {
-					log.WithError(err).Warn("unable to lock item")
+					log.Warn().Err(err).Msg("unable to lock item")
 				}
 			}
 		}
@@ -189,6 +189,6 @@ func (w *WorkItem) ID() string {
 
 // Acknowledge marks a work item as completed.
 func (w *WorkItem) Acknowledge() error {
-	log.WithField("id", w.StoredJobID).Info("deleting work item")
+	log.Info().Uint("id", w.StoredJobID).Msg("deleting work item")
 	return w.db.Where("stored_job_id = ?", w.StoredJobID).Delete(w).Error
 }

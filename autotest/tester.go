@@ -12,7 +12,8 @@ import (
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	_ "github.com/jinzhu/gorm/dialects/sqlite" // For test db.
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/vgough/sequin/job"
 	"github.com/vgough/sequin/job/sql"
@@ -33,16 +34,18 @@ var testInit sync.Once
 // Run automated tests on a workflow to check invariants.
 func Run(ctx context.Context, t Testing, name string, wf workflow.Workflow) (workflow.Workflow, error) {
 	testInit.Do(func() {
+		log.Logger = log.With().Caller().Logger().Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		go func() {
-			log.Println(http.ListenAndServe("localhost:6060", nil))
+			err := http.ListenAndServe("localhost:6060", nil)
+			log.Info().Err(err).Msg("http server exited")
 		}()
-		log.SetLevel(log.DebugLevel)
 	})
 
 	// Enable the Stackdriver Tracing exporter
 	gid := os.Getenv("GCP_PROJECTID")
 	if gid != "" {
-		log.Warn("enabling trace exporter")
+		log.Info().Msg("enabling trace exporter")
 		sd, err := stackdriver.NewExporter(stackdriver.Options{
 			ProjectID: gid,
 		})
@@ -79,7 +82,7 @@ func Run(ctx context.Context, t Testing, name string, wf workflow.Workflow) (wor
 	go sch.WorkerLoop(sctx)
 
 	// Start work.
-	wfjob := workflow.NewJob(name, twf)
+	wfjob := workflow.NewRunnable(name, twf)
 	rec, err := sch.Enqueue(sctx, wfjob, "test="+name)
 	require.NoError(t, err, "unable to schedule workflow")
 

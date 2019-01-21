@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	"github.com/vgough/sequin/workflow"
 	"github.com/vgough/sequin/autotest"
 	"github.com/vgough/sequin/job"
+	"github.com/vgough/sequin/workflow"
 )
 
 func TestFailWorkflow(t *testing.T) {
@@ -35,7 +36,7 @@ type failWorkflow struct {
 
 func (wf *failWorkflow) Run(ctx context.Context, run workflow.Runtime) {
 	run.OnRollback(func() {
-		run.Log().Warn("in rollback")
+		log.Warn().Msg("in rollback")
 		wf.State = "aborted"
 	})
 

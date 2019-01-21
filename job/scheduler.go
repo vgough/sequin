@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"go.opencensus.io/trace"
 )
 
@@ -52,7 +52,7 @@ func (s *Scheduler) Enqueue(ctx context.Context, j Runnable, tags ...string) (Re
 
 func (s *Scheduler) runFN(ctx context.Context) func(w Work) error {
 	return func(w Work) error {
-		ll := log.WithField("id", w.ID())
+		ll := log.With().Str("id", w.ID()).Logger()
 
 		rec, err := s.store.Load(ctx, w.ID())
 		if err != nil {
@@ -63,16 +63,16 @@ func (s *Scheduler) runFN(ctx context.Context) func(w Work) error {
 			return err
 		}
 
-		ll.Info("checking job state")
+		ll.Info().Msg("checking job state")
 		// If the job is finalized, then ack the work item.
 		if snap, err := rec.LastSnapshot(ctx); err != nil {
-			ll.WithError(err).Error("unable to load last snapshot")
+			ll.Error().Err(err).Msg("unable to load last snapshot")
 		} else if snap.IsFinal() {
 			if err := w.Acknowledge(); err != nil {
-				ll.WithError(err).Warn("unable to ack message")
+				ll.Warn().Err(err).Msg("unable to ack message")
 			}
 		} else {
-			log.WithField("rec", rec).Info("job incomplete")
+			log.Info().Interface("rec", rec).Msg("job incomplete")
 		}
 
 		return err
@@ -94,7 +94,7 @@ func (s *Scheduler) WorkerLoop(ctx context.Context) error {
 
 		sctx, span := trace.StartSpan(ctx, "worker")
 		if err := s.q.RunNext(sctx, s.runFN(sctx)); err != nil {
-			log.WithError(err).Debug("job failed")
+			log.Debug().Err(err).Msg("job failed")
 		}
 		span.End()
 	}
@@ -108,21 +108,22 @@ func (s *Scheduler) WaitForCompletion(ctx context.Context, rec Record) (Snapshot
 	ctx, span := trace.StartSpan(ctx, "wait")
 	defer span.End()
 
-	ll := log.WithField("id", rec.JobID())
+	ll := log.With().Str("id", rec.JobID()).Logger()
 	for {
-		ll.Info("checking completion state")
+		ll.Info().Msg("checking completion state")
 		snap, err := rec.LastSnapshot(ctx)
 		if err != nil {
 			return nil, err
 		}
 
 		if snap.IsFinal() {
-			ll.WithError(snap.Result()).Info("waitForCompletion, job finalized")
+			err := snap.Result()
+			ll.Info().Err(err).Msg("waitForCompletion, job finalized")
 			return snap, nil
 		}
 
 		if err := rec.WaitForUpdate(ctx, snap); err != nil {
-			log.WithError(err).Error("waitForCompletion failing")
+			log.Error().Err(err).Msg("waitForCompletion failing")
 			return nil, err
 		}
 	}
