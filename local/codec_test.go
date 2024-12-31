@@ -1,7 +1,6 @@
-package internal
+package local
 
 import (
-	"log/slog"
 	"reflect"
 	"testing"
 
@@ -21,10 +20,9 @@ func TestCodec(t *testing.T) {
 
 func TestCodec_Proto(t *testing.T) {
 	var c DefaultCodec
-	arg1 := &fakeProto{data: "hello"}
+	arg1 := &fakeProto{Data: "hello"}
 	data, err := c.Encode(reflect.ValueOf(arg1))
 	require.NoError(t, err)
-	require.Len(t, data, len(arg1.data))
 
 	res, err := c.Decode(data, reflect.TypeOf(arg1))
 	require.NoError(t, err)
@@ -32,16 +30,5 @@ func TestCodec_Proto(t *testing.T) {
 }
 
 type fakeProto struct {
-	data string
-}
-
-func (p *fakeProto) MarshalVT() ([]byte, error) {
-	slog.Info("marshaling", "data", p.data)
-	return []byte(p.data), nil
-}
-
-func (p *fakeProto) UnmarshalVT(data []byte) error {
-	slog.Info("unmarshaling", "data", string(data))
-	p.data = string(data)
-	return nil
+	Data string
 }

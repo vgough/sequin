@@ -5,8 +5,6 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/vgough/sequin/internal"
-
 	"github.com/vgough/sequin"
 	"github.com/vgough/sequin/registry"
 )
@@ -19,7 +17,7 @@ var _ sequin.Runtime = &Server{}
 
 func NewServer() *Server {
 	return &Server{
-		codec: &internal.DefaultCodec{},
+		codec: &DefaultCodec{},
 	}
 }
 
