@@ -7,10 +7,7 @@ import (
 	"reflect"
 )
 
-type DefaultCodec struct {
-}
-
-func (c *DefaultCodec) Encode(v reflect.Value) ([]byte, error) {
+func Encode(v reflect.Value) ([]byte, error) {
 	at := v.Type()
 	switch {
 	case v.IsZero():
@@ -25,7 +22,7 @@ func (c *DefaultCodec) Encode(v reflect.Value) ([]byte, error) {
 	}
 }
 
-func (c *DefaultCodec) Decode(data []byte, vt reflect.Type) (reflect.Value, error) {
+func Decode(data []byte, vt reflect.Type) (reflect.Value, error) {
 	typ := vt
 	if typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()

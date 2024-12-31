@@ -19,7 +19,7 @@ func TestRegister(t *testing.T) {
 
 	endpoints := registry.RegisteredEndpoints()
 	t.Log(endpoints)
-	require.Contains(t, endpoints, "github.com/arg0net/stateful.isEven")
+	require.Contains(t, endpoints, "github.com/vgough/sequin.isEven")
 }
 
 func TestRuntime(t *testing.T) {

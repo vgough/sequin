@@ -10,16 +10,9 @@ import (
 )
 
 type Server struct {
-	codec sequin.Codec
 }
 
 var _ sequin.Runtime = &Server{}
-
-func NewServer() *Server {
-	return &Server{
-		codec: &DefaultCodec{},
-	}
-}
 
 func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Value {
 	// Marshal the arguments.
@@ -67,7 +60,7 @@ func (s *Server) encodeValues(values []reflect.Value) ([][]byte, error) {
 		if v.Type() == registry.ContextType {
 			continue
 		}
-		d, err := s.codec.Encode(v)
+		d, err := Encode(v)
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +75,7 @@ func (s *Server) decodeValues(data [][]byte, types []reflect.Type) ([]reflect.Va
 		if types[i] == registry.ContextType {
 			continue
 		}
-		val, err := s.codec.Decode(d, types[i])
+		val, err := Decode(d, types[i])
 		if err != nil {
 			return nil, err
 		}

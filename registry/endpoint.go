@@ -34,7 +34,7 @@ func NewEndpoint(fn reflect.Value) (*Endpoint, error) {
 	fnT := fn.Type()
 	switch {
 	case fnT.Kind() != reflect.Func:
-		return nil, errors.New("stateful.Register requires a function argument")
+		return nil, errors.New("sequin.Register requires a function argument")
 	case fnT.NumIn() < 1:
 		return nil, errors.New("function requires at least one argument")
 	case fnT.NumOut() < 1:

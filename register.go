@@ -6,7 +6,7 @@ import (
 	"github.com/vgough/sequin/registry"
 )
 
-const IDGenMDKey = "stateful.IDGen"
+const IDGenMDKey = "sequin.IDGen"
 
 type RegisterOpt func(*registry.Endpoint) error
 
@@ -30,7 +30,7 @@ func Register[T any](fn T, opts ...RegisterOpt) T {
 	fnV := reflect.ValueOf(fn)
 	ep, err := registry.NewEndpoint(fnV)
 	if err != nil {
-		panic("stateful.Register called with invalid function: " + err.Error())
+		panic("sequin.Register called with invalid function: " + err.Error())
 	}
 
 	if ep.ContextIndex < 0 {
