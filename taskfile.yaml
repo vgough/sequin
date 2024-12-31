@@ -1,0 +1,21 @@
+# This is a Taskfile, a simple way to define tasks for your project.
+# You can run tasks with `task <taskname>`.
+# For more information, refer to the documentation at https://taskfile.dev/usage/
+version: '3'
+
+tasks:
+  proto:
+    cmds:
+      - buf generate
+
+  proto-update:
+    cmds:
+      - buf dep update
+
+  test:
+    cmds:
+      - go test -v ./...
+
+  # build:
+  #   cmds:
+  #     - go build -v -i main.go
