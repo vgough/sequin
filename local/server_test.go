@@ -10,8 +10,8 @@ import (
 )
 
 func TestServer(t *testing.T) {
-	var s Server
-	ctx := sequin.WithRuntime(context.Background(), &s)
+	s := NewServer()
+	ctx := sequin.WithRuntime(context.Background(), s)
 
 	ok, err := IsEven(ctx, 0)
 	require.NoError(t, err)

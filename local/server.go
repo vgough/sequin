@@ -2,17 +2,43 @@ package local
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"reflect"
+	"sync"
 
 	"github.com/vgough/sequin"
+	"github.com/vgough/sequin/internal"
 	"github.com/vgough/sequin/registry"
+	"golang.org/x/sync/singleflight"
 )
 
+var encodingKey []byte = []byte("sequin")
+var requestIDMD = internal.MDKey[string]{}
+
 type Server struct {
+	sf singleflight.Group
+
+	mu sync.Mutex
+
+	// maps from request id to current or recent requests.
+	cache map[string]*requestState
+}
+
+type requestState struct {
+	requestID string
+	results   [][]byte
 }
 
 var _ sequin.Runtime = &Server{}
+
+func NewServer() *Server {
+	return &Server{
+		cache: make(map[string]*requestState),
+	}
+}
 
 func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Value {
 	// Marshal the arguments.
@@ -21,8 +47,11 @@ func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Val
 		return ep.MakeError(err)
 	}
 
-	// call backend
-	results, err := s.exec(ep.Name, data)
+	// create unique id from data.
+	ctx := ep.GetContext(args)
+	requestID := computeUniqueID(ctx, data)
+
+	results, err := s.run(ctx, requestID, ep, data)
 	if err != nil {
 		return ep.MakeError(err)
 	}
@@ -36,7 +65,42 @@ func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Val
 	return out
 }
 
-func (s *Server) exec(name string, args [][]byte) ([][]byte, error) {
+func (s *Server) run(ctx context.Context, requestID string,
+	ep *registry.Endpoint, data [][]byte) ([][]byte, error) {
+
+	res := s.sf.DoChan(requestID, func() (interface{}, error) {
+		s.mu.Lock()
+		state, ok := s.cache[requestID]
+		s.mu.Unlock()
+		if ok {
+			return state, nil
+		}
+
+		results, err := s.exec(ep.Name, requestID, data)
+		if err != nil {
+			return nil, err
+		}
+		state = &requestState{requestID: requestID, results: results}
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		s.cache[requestID] = state
+
+		return state, nil
+	})
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-res:
+		if res.Err != nil {
+			return nil, res.Err
+		}
+		state := res.Val.(*requestState)
+		return state.results, nil
+	}
+}
+
+func (s *Server) exec(name string, requestID string, args [][]byte) ([][]byte, error) {
 	ep := registry.GetEndpoint(name)
 	if ep == nil {
 		return nil, errors.New("unknown function: " + name)
@@ -50,8 +114,34 @@ func (s *Server) exec(name string, args [][]byte) ([][]byte, error) {
 		in[ep.ContextIndex] = reflect.ValueOf(context.Background())
 	}
 
+	// TODO: chain to incoming context.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ctx = sequin.WithRuntime(ctx, s)
+	ctx = requestIDMD.Set(ctx, requestID)
+	ep.SetContext(ctx, in)
+
 	out := ep.Exec(in)
 	return s.encodeValues(out)
+}
+
+func computeUniqueID(ctx context.Context, data [][]byte) string {
+	hash := hmac.New(sha256.New, encodingKey)
+
+	var tmp [10]byte
+	parentID := requestIDMD.Get(ctx)
+	if parentID != "" {
+		hash.Write(encodeVarint(len(parentID), tmp))
+		hash.Write([]byte(parentID))
+	}
+
+	for _, d := range data {
+		hash.Write(encodeVarint(len(d), tmp))
+		hash.Write(d)
+	}
+	digest := hash.Sum(nil)
+	return base64.RawStdEncoding.EncodeToString(digest[:])
 }
 
 func (s *Server) encodeValues(values []reflect.Value) ([][]byte, error) {
@@ -82,4 +172,15 @@ func (s *Server) decodeValues(data [][]byte, types []reflect.Type) ([]reflect.Va
 		values[i] = val
 	}
 	return values, nil
+}
+
+func encodeVarint(value int, buf [10]byte) []byte {
+	n := 0
+	for value >= 0x80 {
+		buf[n] = byte(value) | 0x80
+		value >>= 7
+		n++
+	}
+	buf[n] = byte(value)
+	return buf[:n+1]
 }
