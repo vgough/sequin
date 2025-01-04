@@ -49,7 +49,14 @@ func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Val
 
 	// create unique id from data.
 	ctx := ep.GetContext(args)
-	requestID := computeUniqueID(ctx, data)
+	parentID := requestIDMD.Get(ctx)
+	if opt, ok := ep.Metadata[sequin.GlobalIDGen]; ok {
+		if boolVal, ok := opt.(bool); ok && boolVal {
+			parentID = ""
+		}
+	}
+
+	requestID := computeUniqueID(parentID, data)
 
 	results, err := s.run(ctx, requestID, ep, data)
 	if err != nil {
@@ -126,15 +133,12 @@ func (s *Server) exec(name string, requestID string, args [][]byte) ([][]byte, e
 	return s.encodeValues(out)
 }
 
-func computeUniqueID(ctx context.Context, data [][]byte) string {
+func computeUniqueID(parentID string, data [][]byte) string {
 	hash := hmac.New(sha256.New, encodingKey)
 
 	var tmp [10]byte
-	parentID := requestIDMD.Get(ctx)
-	if parentID != "" {
-		hash.Write(encodeVarint(len(parentID), tmp))
-		hash.Write([]byte(parentID))
-	}
+	hash.Write(encodeVarint(len(parentID), tmp))
+	hash.Write([]byte(parentID))
 
 	for _, d := range data {
 		hash.Write(encodeVarint(len(d), tmp))

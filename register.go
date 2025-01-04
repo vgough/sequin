@@ -6,14 +6,15 @@ import (
 	"github.com/vgough/sequin/registry"
 )
 
-const IDGenMDKey = "sequin.IDGen"
-
 type RegisterOpt func(*registry.Endpoint) error
 
-// WithIDGen sets the function to generate an ID for the runtime.
-func WithIDGen(fn func([]reflect.Value) string) RegisterOpt {
+const GlobalIDGen = "sequin.globalID"
+
+// GlobalID marks the function as having a globally unique ID.
+// The default is to scope the ID within any enclosing execution.
+func GlobalID() RegisterOpt {
 	return func(ep *registry.Endpoint) error {
-		ep.Metadata[IDGenMDKey] = fn
+		ep.Metadata[GlobalIDGen] = true
 		return nil
 	}
 }
