@@ -4,23 +4,9 @@ package sequin
 import (
 	"reflect"
 
+	"github.com/vgough/sequin/internal"
 	"github.com/vgough/sequin/registry"
 )
-
-// RegisterOpt is an option for Register.
-type RegisterOpt func(*registry.Endpoint) error
-
-// GlobalIDGen is the key for the global ID generation option.
-const GlobalIDGen = "sequin.globalID"
-
-// GlobalID marks the function as having a globally unique ID.
-// The default is to scope the ID within any enclosing execution.
-func GlobalID() RegisterOpt {
-	return func(ep *registry.Endpoint) error {
-		ep.Metadata[GlobalIDGen] = true
-		return nil
-	}
-}
 
 // Register a function for stateful operation.
 // Returns a wrapper function that can be called to execute the operation.
@@ -56,6 +42,18 @@ func Register[T any](fn T, opts ...RegisterOpt) T {
 	var out T
 	reflect.ValueOf(&out).Elem().Set(wrapperFN)
 	return out
+}
+
+// RegisterOpt is an option for Register.
+type RegisterOpt func(*registry.Endpoint) error
+
+// GlobalID marks the function as having a globally unique ID.
+// The default is to scope the ID within any enclosing execution.
+func GlobalID() RegisterOpt {
+	return func(ep *registry.Endpoint) error {
+		ep.Metadata[internal.GlobalIDGen] = true
+		return nil
+	}
 }
 
 func contextDispatch(ep *registry.Endpoint) func([]reflect.Value) []reflect.Value {
