@@ -90,6 +90,7 @@ func (m *GetRequest) CloneVT() *GetRequest {
 	}
 	r := new(GetRequest)
 	r.RequestId = m.RequestId
+	r.LastUpdateId = m.LastUpdateId
 	if len(m.unknownFields) > 0 {
 		r.unknownFields = make([]byte, len(m.unknownFields))
 		copy(r.unknownFields, m.unknownFields)
@@ -107,6 +108,7 @@ func (m *GetResponse) CloneVT() *GetResponse {
 	}
 	r := new(GetResponse)
 	r.Metadata = m.Metadata.CloneVT()
+	r.LastUpdateId = m.LastUpdateId
 	if rhs := m.Results; rhs != nil {
 		tmpContainer := make([]*anypb.Any, len(rhs))
 		for k, v := range rhs {
@@ -307,6 +309,9 @@ func (this *GetRequest) EqualVT(that *GetRequest) bool {
 	if this.RequestId != that.RequestId {
 		return false
 	}
+	if this.LastUpdateId != that.LastUpdateId {
+		return false
+	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
@@ -341,6 +346,9 @@ func (this *GetResponse) EqualVT(that *GetResponse) bool {
 		}
 	}
 	if !this.Metadata.EqualVT(that.Metadata) {
+		return false
+	}
+	if this.LastUpdateId != that.LastUpdateId {
 		return false
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
@@ -889,6 +897,13 @@ func (m *GetRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if len(m.LastUpdateId) > 0 {
+		i -= len(m.LastUpdateId)
+		copy(dAtA[i:], m.LastUpdateId)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.LastUpdateId)))
+		i--
+		dAtA[i] = 0x12
+	}
 	if len(m.RequestId) > 0 {
 		i -= len(m.RequestId)
 		copy(dAtA[i:], m.RequestId)
@@ -928,6 +943,13 @@ func (m *GetResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
+	}
+	if len(m.LastUpdateId) > 0 {
+		i -= len(m.LastUpdateId)
+		copy(dAtA[i:], m.LastUpdateId)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.LastUpdateId)))
+		i--
+		dAtA[i] = 0x1a
 	}
 	if m.Metadata != nil {
 		size, err := m.Metadata.MarshalToSizedBufferVT(dAtA[:i])
@@ -1421,6 +1443,13 @@ func (m *GetRequest) MarshalToSizedBufferVTStrict(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if len(m.LastUpdateId) > 0 {
+		i -= len(m.LastUpdateId)
+		copy(dAtA[i:], m.LastUpdateId)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.LastUpdateId)))
+		i--
+		dAtA[i] = 0x12
+	}
 	if len(m.RequestId) > 0 {
 		i -= len(m.RequestId)
 		copy(dAtA[i:], m.RequestId)
@@ -1460,6 +1489,13 @@ func (m *GetResponse) MarshalToSizedBufferVTStrict(dAtA []byte) (int, error) {
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
+	}
+	if len(m.LastUpdateId) > 0 {
+		i -= len(m.LastUpdateId)
+		copy(dAtA[i:], m.LastUpdateId)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.LastUpdateId)))
+		i--
+		dAtA[i] = 0x1a
 	}
 	if m.Metadata != nil {
 		size, err := m.Metadata.MarshalToSizedBufferVTStrict(dAtA[:i])
@@ -1834,6 +1870,10 @@ func (m *GetRequest) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
+	l = len(m.LastUpdateId)
+	if l > 0 {
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -1852,6 +1892,10 @@ func (m *GetResponse) SizeVT() (n int) {
 	}
 	if m.Metadata != nil {
 		l = m.Metadata.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	l = len(m.LastUpdateId)
+	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	n += len(m.unknownFields)
@@ -2390,6 +2434,38 @@ func (m *GetRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			m.RequestId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastUpdateId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LastUpdateId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -2510,6 +2586,38 @@ func (m *GetResponse) UnmarshalVT(dAtA []byte) error {
 			if err := m.Metadata.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastUpdateId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LastUpdateId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3809,6 +3917,42 @@ func (m *GetRequest) UnmarshalVTUnsafe(dAtA []byte) error {
 			}
 			m.RequestId = stringValue
 			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastUpdateId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			var stringValue string
+			if intStringLen > 0 {
+				stringValue = unsafe.String(&dAtA[iNdEx], intStringLen)
+			}
+			m.LastUpdateId = stringValue
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -3929,6 +4073,42 @@ func (m *GetResponse) UnmarshalVTUnsafe(dAtA []byte) error {
 			if err := m.Metadata.UnmarshalVTUnsafe(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastUpdateId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			var stringValue string
+			if intStringLen > 0 {
+				stringValue = unsafe.String(&dAtA[iNdEx], intStringLen)
+			}
+			m.LastUpdateId = stringValue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

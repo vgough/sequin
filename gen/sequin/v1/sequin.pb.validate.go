@@ -477,6 +477,8 @@ func (m *GetRequest) validate(all bool) error {
 
 	// no validation rules for RequestId
 
+	// no validation rules for LastUpdateId
+
 	if len(errors) > 0 {
 		return GetRequestMultiError(errors)
 	}
@@ -638,6 +640,8 @@ func (m *GetResponse) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for LastUpdateId
 
 	if len(errors) > 0 {
 		return GetResponseMultiError(errors)
