@@ -34,18 +34,30 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// SequinServiceStartProcedure is the fully-qualified name of the SequinService's Start RPC.
+	SequinServiceStartProcedure = "/arg0net.sequin.v1.SequinService/Start"
+	// SequinServiceGetProcedure is the fully-qualified name of the SequinService's Get RPC.
+	SequinServiceGetProcedure = "/arg0net.sequin.v1.SequinService/Get"
 	// SequinServiceExecProcedure is the fully-qualified name of the SequinService's Exec RPC.
 	SequinServiceExecProcedure = "/arg0net.sequin.v1.SequinService/Exec"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
-	sequinServiceServiceDescriptor    = v1.File_sequin_v1_sequin_proto.Services().ByName("SequinService")
-	sequinServiceExecMethodDescriptor = sequinServiceServiceDescriptor.Methods().ByName("Exec")
+	sequinServiceServiceDescriptor     = v1.File_sequin_v1_sequin_proto.Services().ByName("SequinService")
+	sequinServiceStartMethodDescriptor = sequinServiceServiceDescriptor.Methods().ByName("Start")
+	sequinServiceGetMethodDescriptor   = sequinServiceServiceDescriptor.Methods().ByName("Get")
+	sequinServiceExecMethodDescriptor  = sequinServiceServiceDescriptor.Methods().ByName("Exec")
 )
 
 // SequinServiceClient is a client for the arg0net.sequin.v1.SequinService service.
 type SequinServiceClient interface {
+	// Start begins a new operation.
+	Start(context.Context, *connect.Request[v1.StartRequest]) (*connect.Response[v1.StartResponse], error)
+	// Get returns the current state of an operation.
+	Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error)
+	// Exec starts an operation and always streams back operation updates.
+	// This is preferred over Start/Get for long-running operations.
 	Exec(context.Context, *connect.Request[v1.ExecRequest]) (*connect.ServerStreamForClient[longrunningpb.Operation], error)
 }
 
@@ -59,6 +71,18 @@ type SequinServiceClient interface {
 func NewSequinServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) SequinServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &sequinServiceClient{
+		start: connect.NewClient[v1.StartRequest, v1.StartResponse](
+			httpClient,
+			baseURL+SequinServiceStartProcedure,
+			connect.WithSchema(sequinServiceStartMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		get: connect.NewClient[v1.GetRequest, v1.GetResponse](
+			httpClient,
+			baseURL+SequinServiceGetProcedure,
+			connect.WithSchema(sequinServiceGetMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 		exec: connect.NewClient[v1.ExecRequest, longrunningpb.Operation](
 			httpClient,
 			baseURL+SequinServiceExecProcedure,
@@ -70,7 +94,19 @@ func NewSequinServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 
 // sequinServiceClient implements SequinServiceClient.
 type sequinServiceClient struct {
-	exec *connect.Client[v1.ExecRequest, longrunningpb.Operation]
+	start *connect.Client[v1.StartRequest, v1.StartResponse]
+	get   *connect.Client[v1.GetRequest, v1.GetResponse]
+	exec  *connect.Client[v1.ExecRequest, longrunningpb.Operation]
+}
+
+// Start calls arg0net.sequin.v1.SequinService.Start.
+func (c *sequinServiceClient) Start(ctx context.Context, req *connect.Request[v1.StartRequest]) (*connect.Response[v1.StartResponse], error) {
+	return c.start.CallUnary(ctx, req)
+}
+
+// Get calls arg0net.sequin.v1.SequinService.Get.
+func (c *sequinServiceClient) Get(ctx context.Context, req *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error) {
+	return c.get.CallUnary(ctx, req)
 }
 
 // Exec calls arg0net.sequin.v1.SequinService.Exec.
@@ -80,6 +116,12 @@ func (c *sequinServiceClient) Exec(ctx context.Context, req *connect.Request[v1.
 
 // SequinServiceHandler is an implementation of the arg0net.sequin.v1.SequinService service.
 type SequinServiceHandler interface {
+	// Start begins a new operation.
+	Start(context.Context, *connect.Request[v1.StartRequest]) (*connect.Response[v1.StartResponse], error)
+	// Get returns the current state of an operation.
+	Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error)
+	// Exec starts an operation and always streams back operation updates.
+	// This is preferred over Start/Get for long-running operations.
 	Exec(context.Context, *connect.Request[v1.ExecRequest], *connect.ServerStream[longrunningpb.Operation]) error
 }
 
@@ -89,6 +131,18 @@ type SequinServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewSequinServiceHandler(svc SequinServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	sequinServiceStartHandler := connect.NewUnaryHandler(
+		SequinServiceStartProcedure,
+		svc.Start,
+		connect.WithSchema(sequinServiceStartMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	sequinServiceGetHandler := connect.NewUnaryHandler(
+		SequinServiceGetProcedure,
+		svc.Get,
+		connect.WithSchema(sequinServiceGetMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	sequinServiceExecHandler := connect.NewServerStreamHandler(
 		SequinServiceExecProcedure,
 		svc.Exec,
@@ -97,6 +151,10 @@ func NewSequinServiceHandler(svc SequinServiceHandler, opts ...connect.HandlerOp
 	)
 	return "/arg0net.sequin.v1.SequinService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case SequinServiceStartProcedure:
+			sequinServiceStartHandler.ServeHTTP(w, r)
+		case SequinServiceGetProcedure:
+			sequinServiceGetHandler.ServeHTTP(w, r)
 		case SequinServiceExecProcedure:
 			sequinServiceExecHandler.ServeHTTP(w, r)
 		default:
@@ -107,6 +165,14 @@ func NewSequinServiceHandler(svc SequinServiceHandler, opts ...connect.HandlerOp
 
 // UnimplementedSequinServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedSequinServiceHandler struct{}
+
+func (UnimplementedSequinServiceHandler) Start(context.Context, *connect.Request[v1.StartRequest]) (*connect.Response[v1.StartResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("arg0net.sequin.v1.SequinService.Start is not implemented"))
+}
+
+func (UnimplementedSequinServiceHandler) Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("arg0net.sequin.v1.SequinService.Get is not implemented"))
+}
 
 func (UnimplementedSequinServiceHandler) Exec(context.Context, *connect.Request[v1.ExecRequest], *connect.ServerStream[longrunningpb.Operation]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("arg0net.sequin.v1.SequinService.Exec is not implemented"))

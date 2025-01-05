@@ -12,6 +12,13 @@ import "google/longrunning/operations.proto";
 import "buf/validate/validate.proto";
 
 service SequinService {
+    // Start begins a new operation.
+    rpc Start (StartRequest) returns (StartResponse);
+    // Get returns the current state of an operation.
+    rpc Get (GetRequest) returns (GetResponse);
+
+    // Exec starts an operation and always streams back operation updates.
+    // This is preferred over Start/Get for long-running operations.
     rpc Exec (ExecRequest) returns (stream google.longrunning.Operation) {
         option (google.longrunning.operation_info) = {
             response_type: "ExecResponse"
@@ -19,6 +26,7 @@ service SequinService {
         };
     }
 
+    // Watch streams back operation updates but will not start an operation.
     // rpc Watch (WatchRequest) returns (stream google.longrunning.Operation) {
     //     option (google.longrunning.operation_info) = {
     //         response_type: "WatchResponse"
@@ -26,6 +34,8 @@ service SequinService {
     //     };
     // }
 
+    // Cancel cancels an ongoing operation.
+    // Note that this may not be possible for all operations.
     // rpc Cancel (CancelRequest) returns (CancelResponse);
 }
 
@@ -35,6 +45,28 @@ message ExecRequest {
     }];
     google.protobuf.Any operation = 2;
     RequestMetadata metadata = 3;
+}
+
+message StartRequest {
+    string request_id = 1 [(buf.validate.field).string = {
+        max_len: 80,
+    }];
+    google.protobuf.Any operation = 2;
+    RequestMetadata metadata = 3;
+}
+
+message StartResponse {
+}
+
+message GetRequest {
+    string request_id = 1 [(buf.validate.field).string = {
+        max_len: 80,
+    }];
+}
+
+message GetResponse {
+    repeated google.protobuf.Any results = 1;
+    RunMetadata metadata = 2;
 }
 
 message FuncOperation {
