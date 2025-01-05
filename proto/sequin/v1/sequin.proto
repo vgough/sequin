@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package arg0net.sequin.v1;
+
+option go_package = "sequin/v1";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "google/rpc/status.proto";
+import "google/longrunning/operations.proto";
+
+import "buf/validate/validate.proto";
+
+service SequinService {
+    rpc Exec (ExecRequest) returns (stream google.longrunning.Operation) {
+        option (google.longrunning.operation_info) = {
+            response_type: "ExecResponse"
+            metadata_type: "RunMetadata"
+        };
+    }
+
+    // rpc Watch (WatchRequest) returns (stream google.longrunning.Operation) {
+    //     option (google.longrunning.operation_info) = {
+    //         response_type: "WatchResponse"
+    //         metadata_type: "RunMetadata"
+    //     };
+    // }
+
+    // rpc Cancel (CancelRequest) returns (CancelResponse);
+}
+
+message ExecRequest {
+    string request_id = 1 [(buf.validate.field).string = {
+        max_len: 80,
+    }];
+    google.protobuf.Any operation = 2;
+    RequestMetadata metadata = 3;
+}
+
+message FuncOperation {
+    string name = 1 [(buf.validate.field).string.min_len = 1];
+    repeated google.protobuf.Any args = 2;
+}
+
+message ExecResponse {
+    repeated google.protobuf.Any results = 1;
+    RunMetadata metadata = 2;
+}
+
+message RequestMetadata {
+    string client_version = 1;
+    map<string, string> labels = 2;
+}
+
+message RunMetadata {
+    // Labels are passed-through from the ExecRequest.
+    map<string, string> labels = 1;
+
+    // The following fields are set by the service.
+    string submitter = 2;
+    google.protobuf.Timestamp submitted_at = 3;
+    google.protobuf.Timestamp started_at = 4;
+    google.protobuf.Timestamp finished_at = 5;
+    string server_version = 6;
+
+    google.rpc.Status status = 7;
+}
