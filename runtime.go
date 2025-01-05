@@ -20,6 +20,7 @@ func WithRuntime(ctx context.Context, rt Runtime) context.Context {
 	return runtimeMD.Set(ctx, rt)
 }
 
+// GetRuntime retrieves the runtime from the context.
 func GetRuntime(ctx context.Context) Runtime {
 	return runtimeMD.Get(ctx)
 }

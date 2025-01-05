@@ -1,3 +1,4 @@
+// Package sequin allows registering functions for stateful operation.
 package sequin
 
 import (
@@ -6,8 +7,10 @@ import (
 	"github.com/vgough/sequin/registry"
 )
 
+// RegisterOpt is an option for Register.
 type RegisterOpt func(*registry.Endpoint) error
 
+// GlobalIDGen is the key for the global ID generation option.
 const GlobalIDGen = "sequin.globalID"
 
 // GlobalID marks the function as having a globally unique ID.

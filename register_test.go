@@ -42,7 +42,7 @@ func TestRuntime(t *testing.T) {
 func TestRuntimeError(t *testing.T) {
 	ctx := context.Background()
 	rt := &MockRuntime{
-		ExecFn: func(ep *registry.Endpoint, args []reflect.Value) []reflect.Value {
+		ExecFn: func(ep *registry.Endpoint, _ []reflect.Value) []reflect.Value {
 			slog.Info("mock error", "outputTypes", ep.OutputTypes)
 			return ep.MakeError(errors.New("mock error"))
 		},
@@ -56,7 +56,7 @@ func TestRuntimeError(t *testing.T) {
 
 var IsEven = Register(isEven)
 
-func isEven(ctx context.Context, in int) (bool, error) {
+func isEven(_ context.Context, in int) (bool, error) {
 	if in < 0 {
 		return false, errors.New("negative values not supported")
 	}
@@ -78,7 +78,7 @@ type StatefulType struct {
 	state int
 }
 
-func (st *StatefulType) SetState(ctx context.Context, state int) error {
+func (st *StatefulType) SetState(_ context.Context, state int) error {
 	st.state = state
 	return nil
 }
