@@ -1,4 +1,4 @@
-package local
+package internal
 
 import (
 	"bytes"
@@ -6,6 +6,17 @@ import (
 	"fmt"
 	"reflect"
 )
+
+func EncodeVarint(value int, buf [10]byte) []byte {
+	n := 0
+	for value >= 0x80 {
+		buf[n] = byte(value) | 0x80
+		value >>= 7
+		n++
+	}
+	buf[n] = byte(value)
+	return buf[:n+1]
+}
 
 func Encode(v reflect.Value) ([]byte, error) {
 	at := v.Type()

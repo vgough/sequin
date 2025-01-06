@@ -138,11 +138,11 @@ func computeUniqueID(parentID string, data [][]byte) string {
 	hash := hmac.New(sha256.New, encodingKey)
 
 	var tmp [10]byte
-	hash.Write(encodeVarint(len(parentID), tmp))
+	hash.Write(internal.EncodeVarint(len(parentID), tmp))
 	hash.Write([]byte(parentID))
 
 	for _, d := range data {
-		hash.Write(encodeVarint(len(d), tmp))
+		hash.Write(internal.EncodeVarint(len(d), tmp))
 		hash.Write(d)
 	}
 	digest := hash.Sum(nil)
@@ -155,7 +155,7 @@ func (s *Server) encodeValues(values []reflect.Value) ([][]byte, error) {
 		if v.Type() == registry.ContextType {
 			continue
 		}
-		d, err := Encode(v)
+		d, err := internal.Encode(v)
 		if err != nil {
 			return nil, err
 		}
@@ -170,22 +170,11 @@ func (s *Server) decodeValues(data [][]byte, types []reflect.Type) ([]reflect.Va
 		if types[i] == registry.ContextType {
 			continue
 		}
-		val, err := Decode(d, types[i])
+		val, err := internal.Decode(d, types[i])
 		if err != nil {
 			return nil, err
 		}
 		values[i] = val
 	}
 	return values, nil
-}
-
-func encodeVarint(value int, buf [10]byte) []byte {
-	n := 0
-	for value >= 0x80 {
-		buf[n] = byte(value) | 0x80
-		value >>= 7
-		n++
-	}
-	buf[n] = byte(value)
-	return buf[:n+1]
 }
