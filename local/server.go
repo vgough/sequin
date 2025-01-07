@@ -9,14 +9,13 @@ import (
 	"reflect"
 	"sync"
 
-	"golang.org/x/sync/singleflight"
-
 	"github.com/vgough/sequin"
 	"github.com/vgough/sequin/internal"
 	"github.com/vgough/sequin/registry"
+	"golang.org/x/sync/singleflight"
 )
 
-var encodingKey = []byte("sequin")
+var encodingKey []byte = []byte("sequin")
 var requestIDMD = internal.MDKey[string]{}
 
 type Server struct {

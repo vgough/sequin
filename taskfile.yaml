@@ -16,6 +16,10 @@ tasks:
     cmds:
       - go test -v ./...
 
+  lint:
+    cmds:
+      - revive .
+
   # build:
   #   cmds:
   #     - go build -v -i main.go
