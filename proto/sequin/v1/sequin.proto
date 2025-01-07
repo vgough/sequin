@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package arg0net.sequin.v1;
 
-option go_package = "sequin/v1";
+option go_package = "sequin";
 
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
@@ -40,19 +40,25 @@ service SequinService {
 }
 
 message ExecRequest {
-    string request_id = 1 [(buf.validate.field).string = {
-        max_len: 80,
-    }];
-    google.protobuf.Any operation = 2;
-    RequestMetadata metadata = 3;
+    Operation op = 1;
 }
 
 message StartRequest {
+    Operation op = 1;
+}
+
+message Operation {
     string request_id = 1 [(buf.validate.field).string = {
         max_len: 80,
     }];
-    google.protobuf.Any operation = 2;
+    google.protobuf.Any detail = 2;
     RequestMetadata metadata = 3;
+}
+
+message OperationState {
+    string update_id = 1;
+    repeated google.protobuf.Any results = 2;
+    RunMetadata metadata = 3;
 }
 
 message StartResponse {
@@ -69,9 +75,7 @@ message GetRequest {
 }
 
 message GetResponse {
-    repeated google.protobuf.Any results = 1;
-    RunMetadata metadata = 2;
-    string last_update_id = 3;
+    OperationState state = 1;
 }
 
 message FuncOperation {
@@ -80,8 +84,7 @@ message FuncOperation {
 }
 
 message ExecResponse {
-    repeated google.protobuf.Any results = 1;
-    RunMetadata metadata = 2;
+    OperationState state = 1;
 }
 
 message RequestMetadata {
