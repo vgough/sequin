@@ -14,14 +14,23 @@ import (
 )
 
 type ObjStore struct {
-	db *ent.Client
+	db        *ent.Client
+	numShards int64
+}
+
+type ObjectStoreOption func(*ObjStore)
+
+func WithNumShards(numShards int64) ObjectStoreOption {
+	return func(o *ObjStore) {
+		o.numShards = numShards
+	}
 }
 
 // NewTestObjectStore creates a new in-memory object store for testing.
 // If using this, you must import the sqlite driver:
 //
 //	import _ "github.com/mattn/go-sqlite3"
-func NewTestObjectStore() *ObjStore {
+func NewTestObjectStore(opts ...ObjectStoreOption) *ObjStore {
 	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	if err != nil {
 		log.Fatalf("failed opening connection to sqlite: %v", err)
@@ -29,11 +38,15 @@ func NewTestObjectStore() *ObjStore {
 	if err := client.Schema.Create(context.Background()); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
-	return &ObjStore{db: client}
+	return NewObjectStore(client, opts...)
 }
 
-func NewObjectStore(db *ent.Client) *ObjStore {
-	return &ObjStore{db: db}
+func NewObjectStore(db *ent.Client, opts ...ObjectStoreOption) *ObjStore {
+	o := &ObjStore{db: db, numShards: 1}
+	for _, opt := range opts {
+		opt(o)
+	}
+	return o
 }
 
 var _ Store = (*ObjStore)(nil)
@@ -47,7 +60,7 @@ func (o *ObjStore) AddOperation(ctx context.Context, req *sequinv1.Operation,
 		return err
 	}
 
-	shard := shardFromRequestID(req.RequestId, 1000)
+	shard := o.shardFromRequestID(req.RequestId)
 
 	_, err = o.db.Operation.Create().
 		SetRequestID(req.RequestId).
@@ -72,19 +85,19 @@ func (o *ObjStore) AddOperation(ctx context.Context, req *sequinv1.Operation,
 // 	return err
 // }
 
-func shardFromRequestID(requestID string, maxShards int64) int64 {
+func (o *ObjStore) shardFromRequestID(requestID string) int64 {
 	hash := fnv.New64()
 	hash.Write([]byte(requestID))
 	// Set bottom two bits to 0 to allow for shard changes in the future.
 	id := hash.Sum64() &^ 3
-	return int64(id) % maxShards
+	return int64(id) % o.numShards
 }
 
 // GetOperation implements Store.
 func (o *ObjStore) GetOperation(ctx context.Context,
 	requestID string) (*sequinv1.Operation, error) {
 
-	shard := shardFromRequestID(requestID, 1000)
+	shard := o.shardFromRequestID(requestID)
 
 	entop, err := o.db.Operation.Query().
 		Select(operation.FieldDetail).
@@ -107,7 +120,7 @@ func (o *ObjStore) GetOperation(ctx context.Context,
 func (o *ObjStore) GetState(ctx context.Context,
 	requestID string) (*sequinv1.OperationState, error) {
 
-	shard := shardFromRequestID(requestID, 1000)
+	shard := o.shardFromRequestID(requestID)
 
 	entop, err := o.db.Operation.Query().
 		Select(operation.FieldState).
@@ -126,7 +139,7 @@ func (o *ObjStore) GetState(ctx context.Context,
 func (o *ObjStore) SetState(ctx context.Context,
 	requestID string, state *sequinv1.OperationState) error {
 
-	shard := shardFromRequestID(requestID, 1000)
+	shard := o.shardFromRequestID(requestID)
 
 	stateData, err := proto.Marshal(state)
 	if err != nil {
