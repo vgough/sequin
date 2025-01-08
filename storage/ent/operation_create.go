@@ -55,15 +55,49 @@ func (oc *OperationCreate) SetDetail(b []byte) *OperationCreate {
 	return oc
 }
 
-// SetStatus sets the "status" field.
-func (oc *OperationCreate) SetStatus(b []byte) *OperationCreate {
-	oc.mutation.SetStatus(b)
+// SetState sets the "state" field.
+func (oc *OperationCreate) SetState(b []byte) *OperationCreate {
+	oc.mutation.SetState(b)
 	return oc
 }
 
-// SetIsDone sets the "is_done" field.
-func (oc *OperationCreate) SetIsDone(b bool) *OperationCreate {
-	oc.mutation.SetIsDone(b)
+// SetResult sets the "result" field.
+func (oc *OperationCreate) SetResult(b []byte) *OperationCreate {
+	oc.mutation.SetResult(b)
+	return oc
+}
+
+// SetSubmitter sets the "submitter" field.
+func (oc *OperationCreate) SetSubmitter(s string) *OperationCreate {
+	oc.mutation.SetSubmitter(s)
+	return oc
+}
+
+// SetStartedAt sets the "started_at" field.
+func (oc *OperationCreate) SetStartedAt(t time.Time) *OperationCreate {
+	oc.mutation.SetStartedAt(t)
+	return oc
+}
+
+// SetNillableStartedAt sets the "started_at" field if the given value is not nil.
+func (oc *OperationCreate) SetNillableStartedAt(t *time.Time) *OperationCreate {
+	if t != nil {
+		oc.SetStartedAt(*t)
+	}
+	return oc
+}
+
+// SetFinishedAt sets the "finished_at" field.
+func (oc *OperationCreate) SetFinishedAt(t time.Time) *OperationCreate {
+	oc.mutation.SetFinishedAt(t)
+	return oc
+}
+
+// SetNillableFinishedAt sets the "finished_at" field if the given value is not nil.
+func (oc *OperationCreate) SetNillableFinishedAt(t *time.Time) *OperationCreate {
+	if t != nil {
+		oc.SetFinishedAt(*t)
+	}
 	return oc
 }
 
@@ -144,11 +178,8 @@ func (oc *OperationCreate) check() error {
 	if _, ok := oc.mutation.Detail(); !ok {
 		return &ValidationError{Name: "detail", err: errors.New(`ent: missing required field "Operation.detail"`)}
 	}
-	if _, ok := oc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Operation.status"`)}
-	}
-	if _, ok := oc.mutation.IsDone(); !ok {
-		return &ValidationError{Name: "is_done", err: errors.New(`ent: missing required field "Operation.is_done"`)}
+	if _, ok := oc.mutation.Submitter(); !ok {
+		return &ValidationError{Name: "submitter", err: errors.New(`ent: missing required field "Operation.submitter"`)}
 	}
 	return nil
 }
@@ -197,13 +228,25 @@ func (oc *OperationCreate) createSpec() (*Operation, *sqlgraph.CreateSpec) {
 		_spec.SetField(operation.FieldDetail, field.TypeBytes, value)
 		_node.Detail = value
 	}
-	if value, ok := oc.mutation.Status(); ok {
-		_spec.SetField(operation.FieldStatus, field.TypeBytes, value)
-		_node.Status = value
+	if value, ok := oc.mutation.State(); ok {
+		_spec.SetField(operation.FieldState, field.TypeBytes, value)
+		_node.State = value
 	}
-	if value, ok := oc.mutation.IsDone(); ok {
-		_spec.SetField(operation.FieldIsDone, field.TypeBool, value)
-		_node.IsDone = value
+	if value, ok := oc.mutation.Result(); ok {
+		_spec.SetField(operation.FieldResult, field.TypeBytes, value)
+		_node.Result = value
+	}
+	if value, ok := oc.mutation.Submitter(); ok {
+		_spec.SetField(operation.FieldSubmitter, field.TypeString, value)
+		_node.Submitter = value
+	}
+	if value, ok := oc.mutation.StartedAt(); ok {
+		_spec.SetField(operation.FieldStartedAt, field.TypeTime, value)
+		_node.StartedAt = value
+	}
+	if value, ok := oc.mutation.FinishedAt(); ok {
+		_spec.SetField(operation.FieldFinishedAt, field.TypeTime, value)
+		_node.FinishedAt = value
 	}
 	if nodes := oc.mutation.LabelsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

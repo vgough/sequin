@@ -41,23 +41,81 @@ func (ou *OperationUpdate) SetDetail(b []byte) *OperationUpdate {
 	return ou
 }
 
-// SetStatus sets the "status" field.
-func (ou *OperationUpdate) SetStatus(b []byte) *OperationUpdate {
-	ou.mutation.SetStatus(b)
+// SetState sets the "state" field.
+func (ou *OperationUpdate) SetState(b []byte) *OperationUpdate {
+	ou.mutation.SetState(b)
 	return ou
 }
 
-// SetIsDone sets the "is_done" field.
-func (ou *OperationUpdate) SetIsDone(b bool) *OperationUpdate {
-	ou.mutation.SetIsDone(b)
+// ClearState clears the value of the "state" field.
+func (ou *OperationUpdate) ClearState() *OperationUpdate {
+	ou.mutation.ClearState()
 	return ou
 }
 
-// SetNillableIsDone sets the "is_done" field if the given value is not nil.
-func (ou *OperationUpdate) SetNillableIsDone(b *bool) *OperationUpdate {
-	if b != nil {
-		ou.SetIsDone(*b)
+// SetResult sets the "result" field.
+func (ou *OperationUpdate) SetResult(b []byte) *OperationUpdate {
+	ou.mutation.SetResult(b)
+	return ou
+}
+
+// ClearResult clears the value of the "result" field.
+func (ou *OperationUpdate) ClearResult() *OperationUpdate {
+	ou.mutation.ClearResult()
+	return ou
+}
+
+// SetSubmitter sets the "submitter" field.
+func (ou *OperationUpdate) SetSubmitter(s string) *OperationUpdate {
+	ou.mutation.SetSubmitter(s)
+	return ou
+}
+
+// SetNillableSubmitter sets the "submitter" field if the given value is not nil.
+func (ou *OperationUpdate) SetNillableSubmitter(s *string) *OperationUpdate {
+	if s != nil {
+		ou.SetSubmitter(*s)
 	}
+	return ou
+}
+
+// SetStartedAt sets the "started_at" field.
+func (ou *OperationUpdate) SetStartedAt(t time.Time) *OperationUpdate {
+	ou.mutation.SetStartedAt(t)
+	return ou
+}
+
+// SetNillableStartedAt sets the "started_at" field if the given value is not nil.
+func (ou *OperationUpdate) SetNillableStartedAt(t *time.Time) *OperationUpdate {
+	if t != nil {
+		ou.SetStartedAt(*t)
+	}
+	return ou
+}
+
+// ClearStartedAt clears the value of the "started_at" field.
+func (ou *OperationUpdate) ClearStartedAt() *OperationUpdate {
+	ou.mutation.ClearStartedAt()
+	return ou
+}
+
+// SetFinishedAt sets the "finished_at" field.
+func (ou *OperationUpdate) SetFinishedAt(t time.Time) *OperationUpdate {
+	ou.mutation.SetFinishedAt(t)
+	return ou
+}
+
+// SetNillableFinishedAt sets the "finished_at" field if the given value is not nil.
+func (ou *OperationUpdate) SetNillableFinishedAt(t *time.Time) *OperationUpdate {
+	if t != nil {
+		ou.SetFinishedAt(*t)
+	}
+	return ou
+}
+
+// ClearFinishedAt clears the value of the "finished_at" field.
+func (ou *OperationUpdate) ClearFinishedAt() *OperationUpdate {
+	ou.mutation.ClearFinishedAt()
 	return ou
 }
 
@@ -153,11 +211,32 @@ func (ou *OperationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ou.mutation.Detail(); ok {
 		_spec.SetField(operation.FieldDetail, field.TypeBytes, value)
 	}
-	if value, ok := ou.mutation.Status(); ok {
-		_spec.SetField(operation.FieldStatus, field.TypeBytes, value)
+	if value, ok := ou.mutation.State(); ok {
+		_spec.SetField(operation.FieldState, field.TypeBytes, value)
 	}
-	if value, ok := ou.mutation.IsDone(); ok {
-		_spec.SetField(operation.FieldIsDone, field.TypeBool, value)
+	if ou.mutation.StateCleared() {
+		_spec.ClearField(operation.FieldState, field.TypeBytes)
+	}
+	if value, ok := ou.mutation.Result(); ok {
+		_spec.SetField(operation.FieldResult, field.TypeBytes, value)
+	}
+	if ou.mutation.ResultCleared() {
+		_spec.ClearField(operation.FieldResult, field.TypeBytes)
+	}
+	if value, ok := ou.mutation.Submitter(); ok {
+		_spec.SetField(operation.FieldSubmitter, field.TypeString, value)
+	}
+	if value, ok := ou.mutation.StartedAt(); ok {
+		_spec.SetField(operation.FieldStartedAt, field.TypeTime, value)
+	}
+	if ou.mutation.StartedAtCleared() {
+		_spec.ClearField(operation.FieldStartedAt, field.TypeTime)
+	}
+	if value, ok := ou.mutation.FinishedAt(); ok {
+		_spec.SetField(operation.FieldFinishedAt, field.TypeTime, value)
+	}
+	if ou.mutation.FinishedAtCleared() {
+		_spec.ClearField(operation.FieldFinishedAt, field.TypeTime)
 	}
 	if ou.mutation.LabelsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -236,23 +315,81 @@ func (ouo *OperationUpdateOne) SetDetail(b []byte) *OperationUpdateOne {
 	return ouo
 }
 
-// SetStatus sets the "status" field.
-func (ouo *OperationUpdateOne) SetStatus(b []byte) *OperationUpdateOne {
-	ouo.mutation.SetStatus(b)
+// SetState sets the "state" field.
+func (ouo *OperationUpdateOne) SetState(b []byte) *OperationUpdateOne {
+	ouo.mutation.SetState(b)
 	return ouo
 }
 
-// SetIsDone sets the "is_done" field.
-func (ouo *OperationUpdateOne) SetIsDone(b bool) *OperationUpdateOne {
-	ouo.mutation.SetIsDone(b)
+// ClearState clears the value of the "state" field.
+func (ouo *OperationUpdateOne) ClearState() *OperationUpdateOne {
+	ouo.mutation.ClearState()
 	return ouo
 }
 
-// SetNillableIsDone sets the "is_done" field if the given value is not nil.
-func (ouo *OperationUpdateOne) SetNillableIsDone(b *bool) *OperationUpdateOne {
-	if b != nil {
-		ouo.SetIsDone(*b)
+// SetResult sets the "result" field.
+func (ouo *OperationUpdateOne) SetResult(b []byte) *OperationUpdateOne {
+	ouo.mutation.SetResult(b)
+	return ouo
+}
+
+// ClearResult clears the value of the "result" field.
+func (ouo *OperationUpdateOne) ClearResult() *OperationUpdateOne {
+	ouo.mutation.ClearResult()
+	return ouo
+}
+
+// SetSubmitter sets the "submitter" field.
+func (ouo *OperationUpdateOne) SetSubmitter(s string) *OperationUpdateOne {
+	ouo.mutation.SetSubmitter(s)
+	return ouo
+}
+
+// SetNillableSubmitter sets the "submitter" field if the given value is not nil.
+func (ouo *OperationUpdateOne) SetNillableSubmitter(s *string) *OperationUpdateOne {
+	if s != nil {
+		ouo.SetSubmitter(*s)
 	}
+	return ouo
+}
+
+// SetStartedAt sets the "started_at" field.
+func (ouo *OperationUpdateOne) SetStartedAt(t time.Time) *OperationUpdateOne {
+	ouo.mutation.SetStartedAt(t)
+	return ouo
+}
+
+// SetNillableStartedAt sets the "started_at" field if the given value is not nil.
+func (ouo *OperationUpdateOne) SetNillableStartedAt(t *time.Time) *OperationUpdateOne {
+	if t != nil {
+		ouo.SetStartedAt(*t)
+	}
+	return ouo
+}
+
+// ClearStartedAt clears the value of the "started_at" field.
+func (ouo *OperationUpdateOne) ClearStartedAt() *OperationUpdateOne {
+	ouo.mutation.ClearStartedAt()
+	return ouo
+}
+
+// SetFinishedAt sets the "finished_at" field.
+func (ouo *OperationUpdateOne) SetFinishedAt(t time.Time) *OperationUpdateOne {
+	ouo.mutation.SetFinishedAt(t)
+	return ouo
+}
+
+// SetNillableFinishedAt sets the "finished_at" field if the given value is not nil.
+func (ouo *OperationUpdateOne) SetNillableFinishedAt(t *time.Time) *OperationUpdateOne {
+	if t != nil {
+		ouo.SetFinishedAt(*t)
+	}
+	return ouo
+}
+
+// ClearFinishedAt clears the value of the "finished_at" field.
+func (ouo *OperationUpdateOne) ClearFinishedAt() *OperationUpdateOne {
+	ouo.mutation.ClearFinishedAt()
 	return ouo
 }
 
@@ -378,11 +515,32 @@ func (ouo *OperationUpdateOne) sqlSave(ctx context.Context) (_node *Operation, e
 	if value, ok := ouo.mutation.Detail(); ok {
 		_spec.SetField(operation.FieldDetail, field.TypeBytes, value)
 	}
-	if value, ok := ouo.mutation.Status(); ok {
-		_spec.SetField(operation.FieldStatus, field.TypeBytes, value)
+	if value, ok := ouo.mutation.State(); ok {
+		_spec.SetField(operation.FieldState, field.TypeBytes, value)
 	}
-	if value, ok := ouo.mutation.IsDone(); ok {
-		_spec.SetField(operation.FieldIsDone, field.TypeBool, value)
+	if ouo.mutation.StateCleared() {
+		_spec.ClearField(operation.FieldState, field.TypeBytes)
+	}
+	if value, ok := ouo.mutation.Result(); ok {
+		_spec.SetField(operation.FieldResult, field.TypeBytes, value)
+	}
+	if ouo.mutation.ResultCleared() {
+		_spec.ClearField(operation.FieldResult, field.TypeBytes)
+	}
+	if value, ok := ouo.mutation.Submitter(); ok {
+		_spec.SetField(operation.FieldSubmitter, field.TypeString, value)
+	}
+	if value, ok := ouo.mutation.StartedAt(); ok {
+		_spec.SetField(operation.FieldStartedAt, field.TypeTime, value)
+	}
+	if ouo.mutation.StartedAtCleared() {
+		_spec.ClearField(operation.FieldStartedAt, field.TypeTime)
+	}
+	if value, ok := ouo.mutation.FinishedAt(); ok {
+		_spec.SetField(operation.FieldFinishedAt, field.TypeTime, value)
+	}
+	if ouo.mutation.FinishedAtCleared() {
+		_spec.ClearField(operation.FieldFinishedAt, field.TypeTime)
 	}
 	if ouo.mutation.LabelsCleared() {
 		edge := &sqlgraph.EdgeSpec{

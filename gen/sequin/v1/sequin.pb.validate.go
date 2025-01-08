@@ -344,35 +344,6 @@ func (m *Operation) validate(all bool) error {
 		}
 	}
 
-	if all {
-		switch v := interface{}(m.GetMetadata()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, OperationValidationError{
-					field:  "Metadata",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, OperationValidationError{
-					field:  "Metadata",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetMetadata()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return OperationValidationError{
-				field:  "Metadata",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	if len(errors) > 0 {
 		return OperationMultiError(errors)
 	}
@@ -450,6 +421,142 @@ var _ interface {
 	ErrorName() string
 } = OperationValidationError{}
 
+// Validate checks the field values on OperationResult with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *OperationResult) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on OperationResult with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// OperationResultMultiError, or nil if none found.
+func (m *OperationResult) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *OperationResult) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for UpdateId
+
+	for idx, item := range m.GetResults() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, OperationResultValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, OperationResultValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return OperationResultValidationError{
+					field:  fmt.Sprintf("Results[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return OperationResultMultiError(errors)
+	}
+
+	return nil
+}
+
+// OperationResultMultiError is an error wrapping multiple validation errors
+// returned by OperationResult.ValidateAll() if the designated constraints
+// aren't met.
+type OperationResultMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m OperationResultMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m OperationResultMultiError) AllErrors() []error { return m }
+
+// OperationResultValidationError is the validation error returned by
+// OperationResult.Validate if the designated constraints aren't met.
+type OperationResultValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OperationResultValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OperationResultValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OperationResultValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OperationResultValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OperationResultValidationError) ErrorName() string { return "OperationResultValidationError" }
+
+// Error satisfies the builtin error interface
+func (e OperationResultValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOperationResult.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OperationResultValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OperationResultValidationError{}
+
 // Validate checks the field values on OperationState with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -474,66 +581,49 @@ func (m *OperationState) validate(all bool) error {
 
 	// no validation rules for UpdateId
 
-	for idx, item := range m.GetResults() {
-		_, _ = idx, item
+	{
+		sorted_keys := make([]string, len(m.GetState()))
+		i := 0
+		for key := range m.GetState() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetState()[key]
+			_ = val
 
-		if all {
-			switch v := interface{}(item).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, OperationStateValidationError{
-						field:  fmt.Sprintf("Results[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
+			// no validation rules for State[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, OperationStateValidationError{
+							field:  fmt.Sprintf("State[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, OperationStateValidationError{
+							field:  fmt.Sprintf("State[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
 				}
-			case interface{ Validate() error }:
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
 				if err := v.Validate(); err != nil {
-					errors = append(errors, OperationStateValidationError{
-						field:  fmt.Sprintf("Results[%v]", idx),
+					return OperationStateValidationError{
+						field:  fmt.Sprintf("State[%v]", key),
 						reason: "embedded message failed validation",
 						cause:  err,
-					})
+					}
 				}
 			}
-		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return OperationStateValidationError{
-					field:  fmt.Sprintf("Results[%v]", idx),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
 
-	}
-
-	if all {
-		switch v := interface{}(m.GetMetadata()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, OperationStateValidationError{
-					field:  "Metadata",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, OperationStateValidationError{
-					field:  "Metadata",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetMetadata()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return OperationStateValidationError{
-				field:  "Metadata",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
 		}
 	}
 
@@ -741,6 +831,35 @@ func (m *GetRequest) validate(all bool) error {
 
 	// no validation rules for LastUpdateId
 
+	if all {
+		switch v := interface{}(m.GetState()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetRequestValidationError{
+					field:  "State",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetRequestValidationError{
+					field:  "State",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetState()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetRequestValidationError{
+				field:  "State",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return GetRequestMultiError(errors)
 	}
@@ -841,11 +960,11 @@ func (m *GetResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetState()).(type) {
+		switch v := interface{}(m.GetResult()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, GetResponseValidationError{
-					field:  "State",
+					field:  "Result",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -853,16 +972,16 @@ func (m *GetResponse) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, GetResponseValidationError{
-					field:  "State",
+					field:  "Result",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetState()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetResult()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return GetResponseValidationError{
-				field:  "State",
+				field:  "Result",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1105,11 +1224,11 @@ func (m *ExecResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetState()).(type) {
+		switch v := interface{}(m.GetResult()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, ExecResponseValidationError{
-					field:  "State",
+					field:  "Result",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -1117,16 +1236,16 @@ func (m *ExecResponse) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, ExecResponseValidationError{
-					field:  "State",
+					field:  "Result",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetState()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetResult()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return ExecResponseValidationError{
-				field:  "State",
+				field:  "Result",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1210,110 +1329,6 @@ var _ interface {
 	ErrorName() string
 } = ExecResponseValidationError{}
 
-// Validate checks the field values on RequestMetadata with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *RequestMetadata) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on RequestMetadata with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// RequestMetadataMultiError, or nil if none found.
-func (m *RequestMetadata) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *RequestMetadata) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for ClientVersion
-
-	// no validation rules for Labels
-
-	if len(errors) > 0 {
-		return RequestMetadataMultiError(errors)
-	}
-
-	return nil
-}
-
-// RequestMetadataMultiError is an error wrapping multiple validation errors
-// returned by RequestMetadata.ValidateAll() if the designated constraints
-// aren't met.
-type RequestMetadataMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m RequestMetadataMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m RequestMetadataMultiError) AllErrors() []error { return m }
-
-// RequestMetadataValidationError is the validation error returned by
-// RequestMetadata.Validate if the designated constraints aren't met.
-type RequestMetadataValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e RequestMetadataValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e RequestMetadataValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e RequestMetadataValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e RequestMetadataValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e RequestMetadataValidationError) ErrorName() string { return "RequestMetadataValidationError" }
-
-// Error satisfies the builtin error interface
-func (e RequestMetadataValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sRequestMetadata.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = RequestMetadataValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = RequestMetadataValidationError{}
-
 // Validate checks the field values on RunMetadata with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -1335,10 +1350,6 @@ func (m *RunMetadata) validate(all bool) error {
 	}
 
 	var errors []error
-
-	// no validation rules for Labels
-
-	// no validation rules for Submitter
 
 	if all {
 		switch v := interface{}(m.GetSubmittedAt()).(type) {
@@ -1428,35 +1439,6 @@ func (m *RunMetadata) validate(all bool) error {
 	}
 
 	// no validation rules for ServerVersion
-
-	if all {
-		switch v := interface{}(m.GetStatus()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, RunMetadataValidationError{
-					field:  "Status",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, RunMetadataValidationError{
-					field:  "Status",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetStatus()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return RunMetadataValidationError{
-				field:  "Status",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
 
 	if len(errors) > 0 {
 		return RunMetadataMultiError(errors)

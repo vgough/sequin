@@ -33,8 +33,11 @@ var (
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "detail", Type: field.TypeBytes},
-		{Name: "status", Type: field.TypeBytes},
-		{Name: "is_done", Type: field.TypeBool},
+		{Name: "state", Type: field.TypeBytes, Nullable: true},
+		{Name: "result", Type: field.TypeBytes, Nullable: true},
+		{Name: "submitter", Type: field.TypeString},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
 	}
 	// OperationsTable holds the schema information for the "operations" table.
 	OperationsTable = &schema.Table{

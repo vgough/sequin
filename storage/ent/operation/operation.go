@@ -20,10 +20,16 @@ const (
 	FieldUpdateTime = "update_time"
 	// FieldDetail holds the string denoting the detail field in the database.
 	FieldDetail = "detail"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "status"
-	// FieldIsDone holds the string denoting the is_done field in the database.
-	FieldIsDone = "is_done"
+	// FieldState holds the string denoting the state field in the database.
+	FieldState = "state"
+	// FieldResult holds the string denoting the result field in the database.
+	FieldResult = "result"
+	// FieldSubmitter holds the string denoting the submitter field in the database.
+	FieldSubmitter = "submitter"
+	// FieldStartedAt holds the string denoting the started_at field in the database.
+	FieldStartedAt = "started_at"
+	// FieldFinishedAt holds the string denoting the finished_at field in the database.
+	FieldFinishedAt = "finished_at"
 	// EdgeLabels holds the string denoting the labels edge name in mutations.
 	EdgeLabels = "labels"
 	// Table holds the table name of the operation in the database.
@@ -41,8 +47,11 @@ var Columns = []string{
 	FieldCreateTime,
 	FieldUpdateTime,
 	FieldDetail,
-	FieldStatus,
-	FieldIsDone,
+	FieldState,
+	FieldResult,
+	FieldSubmitter,
+	FieldStartedAt,
+	FieldFinishedAt,
 }
 
 var (
@@ -88,9 +97,19 @@ func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
 }
 
-// ByIsDone orders the results by the is_done field.
-func ByIsDone(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIsDone, opts...).ToFunc()
+// BySubmitter orders the results by the submitter field.
+func BySubmitter(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubmitter, opts...).ToFunc()
+}
+
+// ByStartedAt orders the results by the started_at field.
+func ByStartedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStartedAt, opts...).ToFunc()
+}
+
+// ByFinishedAt orders the results by the finished_at field.
+func ByFinishedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFinishedAt, opts...).ToFunc()
 }
 
 // ByLabelsCount orders the results by labels count.

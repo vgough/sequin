@@ -80,14 +80,29 @@ func Detail(v []byte) predicate.Operation {
 	return predicate.Operation(sql.FieldEQ(FieldDetail, v))
 }
 
-// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
-func Status(v []byte) predicate.Operation {
-	return predicate.Operation(sql.FieldEQ(FieldStatus, v))
+// State applies equality check predicate on the "state" field. It's identical to StateEQ.
+func State(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldState, v))
 }
 
-// IsDone applies equality check predicate on the "is_done" field. It's identical to IsDoneEQ.
-func IsDone(v bool) predicate.Operation {
-	return predicate.Operation(sql.FieldEQ(FieldIsDone, v))
+// Result applies equality check predicate on the "result" field. It's identical to ResultEQ.
+func Result(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldResult, v))
+}
+
+// Submitter applies equality check predicate on the "submitter" field. It's identical to SubmitterEQ.
+func Submitter(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldSubmitter, v))
+}
+
+// StartedAt applies equality check predicate on the "started_at" field. It's identical to StartedAtEQ.
+func StartedAt(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldStartedAt, v))
+}
+
+// FinishedAt applies equality check predicate on the "finished_at" field. It's identical to FinishedAtEQ.
+func FinishedAt(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldFinishedAt, v))
 }
 
 // CreateTimeEQ applies the EQ predicate on the "create_time" field.
@@ -210,54 +225,269 @@ func DetailLTE(v []byte) predicate.Operation {
 	return predicate.Operation(sql.FieldLTE(FieldDetail, v))
 }
 
-// StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v []byte) predicate.Operation {
-	return predicate.Operation(sql.FieldEQ(FieldStatus, v))
+// StateEQ applies the EQ predicate on the "state" field.
+func StateEQ(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldState, v))
 }
 
-// StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v []byte) predicate.Operation {
-	return predicate.Operation(sql.FieldNEQ(FieldStatus, v))
+// StateNEQ applies the NEQ predicate on the "state" field.
+func StateNEQ(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldNEQ(FieldState, v))
 }
 
-// StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...[]byte) predicate.Operation {
-	return predicate.Operation(sql.FieldIn(FieldStatus, vs...))
+// StateIn applies the In predicate on the "state" field.
+func StateIn(vs ...[]byte) predicate.Operation {
+	return predicate.Operation(sql.FieldIn(FieldState, vs...))
 }
 
-// StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...[]byte) predicate.Operation {
-	return predicate.Operation(sql.FieldNotIn(FieldStatus, vs...))
+// StateNotIn applies the NotIn predicate on the "state" field.
+func StateNotIn(vs ...[]byte) predicate.Operation {
+	return predicate.Operation(sql.FieldNotIn(FieldState, vs...))
 }
 
-// StatusGT applies the GT predicate on the "status" field.
-func StatusGT(v []byte) predicate.Operation {
-	return predicate.Operation(sql.FieldGT(FieldStatus, v))
+// StateGT applies the GT predicate on the "state" field.
+func StateGT(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldGT(FieldState, v))
 }
 
-// StatusGTE applies the GTE predicate on the "status" field.
-func StatusGTE(v []byte) predicate.Operation {
-	return predicate.Operation(sql.FieldGTE(FieldStatus, v))
+// StateGTE applies the GTE predicate on the "state" field.
+func StateGTE(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldGTE(FieldState, v))
 }
 
-// StatusLT applies the LT predicate on the "status" field.
-func StatusLT(v []byte) predicate.Operation {
-	return predicate.Operation(sql.FieldLT(FieldStatus, v))
+// StateLT applies the LT predicate on the "state" field.
+func StateLT(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldLT(FieldState, v))
 }
 
-// StatusLTE applies the LTE predicate on the "status" field.
-func StatusLTE(v []byte) predicate.Operation {
-	return predicate.Operation(sql.FieldLTE(FieldStatus, v))
+// StateLTE applies the LTE predicate on the "state" field.
+func StateLTE(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldLTE(FieldState, v))
 }
 
-// IsDoneEQ applies the EQ predicate on the "is_done" field.
-func IsDoneEQ(v bool) predicate.Operation {
-	return predicate.Operation(sql.FieldEQ(FieldIsDone, v))
+// StateIsNil applies the IsNil predicate on the "state" field.
+func StateIsNil() predicate.Operation {
+	return predicate.Operation(sql.FieldIsNull(FieldState))
 }
 
-// IsDoneNEQ applies the NEQ predicate on the "is_done" field.
-func IsDoneNEQ(v bool) predicate.Operation {
-	return predicate.Operation(sql.FieldNEQ(FieldIsDone, v))
+// StateNotNil applies the NotNil predicate on the "state" field.
+func StateNotNil() predicate.Operation {
+	return predicate.Operation(sql.FieldNotNull(FieldState))
+}
+
+// ResultEQ applies the EQ predicate on the "result" field.
+func ResultEQ(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldResult, v))
+}
+
+// ResultNEQ applies the NEQ predicate on the "result" field.
+func ResultNEQ(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldNEQ(FieldResult, v))
+}
+
+// ResultIn applies the In predicate on the "result" field.
+func ResultIn(vs ...[]byte) predicate.Operation {
+	return predicate.Operation(sql.FieldIn(FieldResult, vs...))
+}
+
+// ResultNotIn applies the NotIn predicate on the "result" field.
+func ResultNotIn(vs ...[]byte) predicate.Operation {
+	return predicate.Operation(sql.FieldNotIn(FieldResult, vs...))
+}
+
+// ResultGT applies the GT predicate on the "result" field.
+func ResultGT(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldGT(FieldResult, v))
+}
+
+// ResultGTE applies the GTE predicate on the "result" field.
+func ResultGTE(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldGTE(FieldResult, v))
+}
+
+// ResultLT applies the LT predicate on the "result" field.
+func ResultLT(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldLT(FieldResult, v))
+}
+
+// ResultLTE applies the LTE predicate on the "result" field.
+func ResultLTE(v []byte) predicate.Operation {
+	return predicate.Operation(sql.FieldLTE(FieldResult, v))
+}
+
+// ResultIsNil applies the IsNil predicate on the "result" field.
+func ResultIsNil() predicate.Operation {
+	return predicate.Operation(sql.FieldIsNull(FieldResult))
+}
+
+// ResultNotNil applies the NotNil predicate on the "result" field.
+func ResultNotNil() predicate.Operation {
+	return predicate.Operation(sql.FieldNotNull(FieldResult))
+}
+
+// SubmitterEQ applies the EQ predicate on the "submitter" field.
+func SubmitterEQ(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldSubmitter, v))
+}
+
+// SubmitterNEQ applies the NEQ predicate on the "submitter" field.
+func SubmitterNEQ(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldNEQ(FieldSubmitter, v))
+}
+
+// SubmitterIn applies the In predicate on the "submitter" field.
+func SubmitterIn(vs ...string) predicate.Operation {
+	return predicate.Operation(sql.FieldIn(FieldSubmitter, vs...))
+}
+
+// SubmitterNotIn applies the NotIn predicate on the "submitter" field.
+func SubmitterNotIn(vs ...string) predicate.Operation {
+	return predicate.Operation(sql.FieldNotIn(FieldSubmitter, vs...))
+}
+
+// SubmitterGT applies the GT predicate on the "submitter" field.
+func SubmitterGT(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldGT(FieldSubmitter, v))
+}
+
+// SubmitterGTE applies the GTE predicate on the "submitter" field.
+func SubmitterGTE(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldGTE(FieldSubmitter, v))
+}
+
+// SubmitterLT applies the LT predicate on the "submitter" field.
+func SubmitterLT(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldLT(FieldSubmitter, v))
+}
+
+// SubmitterLTE applies the LTE predicate on the "submitter" field.
+func SubmitterLTE(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldLTE(FieldSubmitter, v))
+}
+
+// SubmitterContains applies the Contains predicate on the "submitter" field.
+func SubmitterContains(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldContains(FieldSubmitter, v))
+}
+
+// SubmitterHasPrefix applies the HasPrefix predicate on the "submitter" field.
+func SubmitterHasPrefix(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldHasPrefix(FieldSubmitter, v))
+}
+
+// SubmitterHasSuffix applies the HasSuffix predicate on the "submitter" field.
+func SubmitterHasSuffix(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldHasSuffix(FieldSubmitter, v))
+}
+
+// SubmitterEqualFold applies the EqualFold predicate on the "submitter" field.
+func SubmitterEqualFold(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldEqualFold(FieldSubmitter, v))
+}
+
+// SubmitterContainsFold applies the ContainsFold predicate on the "submitter" field.
+func SubmitterContainsFold(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldContainsFold(FieldSubmitter, v))
+}
+
+// StartedAtEQ applies the EQ predicate on the "started_at" field.
+func StartedAtEQ(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldStartedAt, v))
+}
+
+// StartedAtNEQ applies the NEQ predicate on the "started_at" field.
+func StartedAtNEQ(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldNEQ(FieldStartedAt, v))
+}
+
+// StartedAtIn applies the In predicate on the "started_at" field.
+func StartedAtIn(vs ...time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldIn(FieldStartedAt, vs...))
+}
+
+// StartedAtNotIn applies the NotIn predicate on the "started_at" field.
+func StartedAtNotIn(vs ...time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldNotIn(FieldStartedAt, vs...))
+}
+
+// StartedAtGT applies the GT predicate on the "started_at" field.
+func StartedAtGT(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldGT(FieldStartedAt, v))
+}
+
+// StartedAtGTE applies the GTE predicate on the "started_at" field.
+func StartedAtGTE(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldGTE(FieldStartedAt, v))
+}
+
+// StartedAtLT applies the LT predicate on the "started_at" field.
+func StartedAtLT(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldLT(FieldStartedAt, v))
+}
+
+// StartedAtLTE applies the LTE predicate on the "started_at" field.
+func StartedAtLTE(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldLTE(FieldStartedAt, v))
+}
+
+// StartedAtIsNil applies the IsNil predicate on the "started_at" field.
+func StartedAtIsNil() predicate.Operation {
+	return predicate.Operation(sql.FieldIsNull(FieldStartedAt))
+}
+
+// StartedAtNotNil applies the NotNil predicate on the "started_at" field.
+func StartedAtNotNil() predicate.Operation {
+	return predicate.Operation(sql.FieldNotNull(FieldStartedAt))
+}
+
+// FinishedAtEQ applies the EQ predicate on the "finished_at" field.
+func FinishedAtEQ(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldFinishedAt, v))
+}
+
+// FinishedAtNEQ applies the NEQ predicate on the "finished_at" field.
+func FinishedAtNEQ(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldNEQ(FieldFinishedAt, v))
+}
+
+// FinishedAtIn applies the In predicate on the "finished_at" field.
+func FinishedAtIn(vs ...time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldIn(FieldFinishedAt, vs...))
+}
+
+// FinishedAtNotIn applies the NotIn predicate on the "finished_at" field.
+func FinishedAtNotIn(vs ...time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldNotIn(FieldFinishedAt, vs...))
+}
+
+// FinishedAtGT applies the GT predicate on the "finished_at" field.
+func FinishedAtGT(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldGT(FieldFinishedAt, v))
+}
+
+// FinishedAtGTE applies the GTE predicate on the "finished_at" field.
+func FinishedAtGTE(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldGTE(FieldFinishedAt, v))
+}
+
+// FinishedAtLT applies the LT predicate on the "finished_at" field.
+func FinishedAtLT(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldLT(FieldFinishedAt, v))
+}
+
+// FinishedAtLTE applies the LTE predicate on the "finished_at" field.
+func FinishedAtLTE(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldLTE(FieldFinishedAt, v))
+}
+
+// FinishedAtIsNil applies the IsNil predicate on the "finished_at" field.
+func FinishedAtIsNil() predicate.Operation {
+	return predicate.Operation(sql.FieldIsNull(FieldFinishedAt))
+}
+
+// FinishedAtNotNil applies the NotNil predicate on the "finished_at" field.
+func FinishedAtNotNil() predicate.Operation {
+	return predicate.Operation(sql.FieldNotNull(FieldFinishedAt))
 }
 
 // HasLabels applies the HasEdge predicate on the "labels" edge.

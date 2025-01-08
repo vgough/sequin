@@ -23,10 +23,16 @@ type Operation struct {
 	UpdateTime time.Time `json:"update_time,omitempty"`
 	// Detail holds the value of the "detail" field.
 	Detail []byte `json:"detail,omitempty"`
-	// Status holds the value of the "status" field.
-	Status []byte `json:"status,omitempty"`
-	// IsDone holds the value of the "is_done" field.
-	IsDone bool `json:"is_done,omitempty"`
+	// State holds the value of the "state" field.
+	State []byte `json:"state,omitempty"`
+	// Result holds the value of the "result" field.
+	Result []byte `json:"result,omitempty"`
+	// Submitter holds the value of the "submitter" field.
+	Submitter string `json:"submitter,omitempty"`
+	// StartedAt holds the value of the "started_at" field.
+	StartedAt time.Time `json:"started_at,omitempty"`
+	// FinishedAt holds the value of the "finished_at" field.
+	FinishedAt time.Time `json:"finished_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the OperationQuery when eager-loading is set.
 	Edges        OperationEdges `json:"edges"`
@@ -56,13 +62,11 @@ func (*Operation) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case operation.FieldDetail, operation.FieldStatus:
+		case operation.FieldDetail, operation.FieldState, operation.FieldResult:
 			values[i] = new([]byte)
-		case operation.FieldIsDone:
-			values[i] = new(sql.NullBool)
-		case operation.FieldID:
+		case operation.FieldID, operation.FieldSubmitter:
 			values[i] = new(sql.NullString)
-		case operation.FieldCreateTime, operation.FieldUpdateTime:
+		case operation.FieldCreateTime, operation.FieldUpdateTime, operation.FieldStartedAt, operation.FieldFinishedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -103,17 +107,35 @@ func (o *Operation) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				o.Detail = *value
 			}
-		case operation.FieldStatus:
+		case operation.FieldState:
 			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
+				return fmt.Errorf("unexpected type %T for field state", values[i])
 			} else if value != nil {
-				o.Status = *value
+				o.State = *value
 			}
-		case operation.FieldIsDone:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_done", values[i])
+		case operation.FieldResult:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field result", values[i])
+			} else if value != nil {
+				o.Result = *value
+			}
+		case operation.FieldSubmitter:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field submitter", values[i])
 			} else if value.Valid {
-				o.IsDone = value.Bool
+				o.Submitter = value.String
+			}
+		case operation.FieldStartedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field started_at", values[i])
+			} else if value.Valid {
+				o.StartedAt = value.Time
+			}
+		case operation.FieldFinishedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field finished_at", values[i])
+			} else if value.Valid {
+				o.FinishedAt = value.Time
 			}
 		default:
 			o.selectValues.Set(columns[i], values[i])
@@ -165,11 +187,20 @@ func (o *Operation) String() string {
 	builder.WriteString("detail=")
 	builder.WriteString(fmt.Sprintf("%v", o.Detail))
 	builder.WriteString(", ")
-	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", o.Status))
+	builder.WriteString("state=")
+	builder.WriteString(fmt.Sprintf("%v", o.State))
 	builder.WriteString(", ")
-	builder.WriteString("is_done=")
-	builder.WriteString(fmt.Sprintf("%v", o.IsDone))
+	builder.WriteString("result=")
+	builder.WriteString(fmt.Sprintf("%v", o.Result))
+	builder.WriteString(", ")
+	builder.WriteString("submitter=")
+	builder.WriteString(o.Submitter)
+	builder.WriteString(", ")
+	builder.WriteString("started_at=")
+	builder.WriteString(o.StartedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("finished_at=")
+	builder.WriteString(o.FinishedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

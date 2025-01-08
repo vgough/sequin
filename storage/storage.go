@@ -7,16 +7,26 @@ import (
 )
 
 type Store interface {
-	AddRequest(ctx context.Context,
+	AddOperation(ctx context.Context,
 		req *sequinv1.Operation,
-		state *sequinv1.OperationState) error
+		submitter string) error
+
+	GetOperation(ctx context.Context,
+		requestID string) (*sequinv1.Operation, error)
+
+	// TODO: ListOperations.
+
 	SetState(ctx context.Context,
 		requestID string,
 		state *sequinv1.OperationState) error
+
 	GetState(ctx context.Context,
 		requestID string) (*sequinv1.OperationState, error)
-	GetRequest(ctx context.Context,
-		requestID string) (*sequinv1.Operation, *sequinv1.OperationState, error)
 
-	// TODO: ListRequests.
+	SetResult(ctx context.Context,
+		requestID string,
+		result *sequinv1.OperationResult) error
+
+	GetResult(ctx context.Context,
+		requestID string) (bool, *sequinv1.OperationResult, error)
 }

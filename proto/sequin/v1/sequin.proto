@@ -52,13 +52,16 @@ message Operation {
         max_len: 80,
     }];
     google.protobuf.Any detail = 2;
-    RequestMetadata metadata = 3;
+}
+
+message OperationResult {
+    int64 update_id = 1;
+    repeated google.protobuf.Any results = 2;
 }
 
 message OperationState {
-    string update_id = 1;
-    repeated google.protobuf.Any results = 2;
-    RunMetadata metadata = 3;
+    int64 update_id = 1;
+    map<string, google.protobuf.Any> state = 2;
 }
 
 message StartResponse {
@@ -71,11 +74,12 @@ message GetRequest {
     // LastUpdateId is the last update ID received by the client from a GetResponse.
     // If provided, the server will block until there is a new update.
     // This changes the behavior of Get to be a long-polling operation.
-    string last_update_id = 2;
+    int64 last_update_id = 2;
+    OperationState state = 3;
 }
 
 message GetResponse {
-    OperationState state = 1;
+    OperationResult result = 1;
 }
 
 message FuncOperation {
@@ -84,24 +88,12 @@ message FuncOperation {
 }
 
 message ExecResponse {
-    OperationState state = 1;
-}
-
-message RequestMetadata {
-    string client_version = 1;
-    map<string, string> labels = 2;
+    OperationResult result = 1;
 }
 
 message RunMetadata {
-    // Labels are passed-through from the ExecRequest.
-    map<string, string> labels = 1;
-
-    // The following fields are set by the service.
-    string submitter = 2;
-    google.protobuf.Timestamp submitted_at = 3;
-    google.protobuf.Timestamp started_at = 4;
-    google.protobuf.Timestamp finished_at = 5;
-    string server_version = 6;
-
-    google.rpc.Status status = 7;
+    google.protobuf.Timestamp submitted_at = 1;
+    google.protobuf.Timestamp started_at = 2;
+    google.protobuf.Timestamp finished_at = 3;
+    string server_version = 4;
 }

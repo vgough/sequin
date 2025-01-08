@@ -17,8 +17,11 @@ func (Operation) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("id"),
 		field.Bytes("detail"),
-		field.Bytes("status"),
-		field.Bool("is_done"),
+		field.Bytes("state").Optional(),
+		field.Bytes("result").Optional(),
+		field.String("submitter"),
+		field.Time("started_at").Optional(),
+		field.Time("finished_at").Optional(),
 	}
 }
 
