@@ -29,10 +29,13 @@ var (
 	}
 	// OperationsColumns holds the columns for the "operations" table.
 	OperationsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString},
+		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
+		{Name: "request_id", Type: field.TypeString},
+		{Name: "shard", Type: field.TypeInt64, Default: 0},
 		{Name: "detail", Type: field.TypeBytes},
+		{Name: "next_check_at", Type: field.TypeTime, Nullable: true},
 		{Name: "state", Type: field.TypeBytes, Nullable: true},
 		{Name: "result", Type: field.TypeBytes, Nullable: true},
 		{Name: "submitter", Type: field.TypeString},
@@ -47,7 +50,7 @@ var (
 	}
 	// OperationLabelsColumns holds the columns for the "operation_labels" table.
 	OperationLabelsColumns = []*schema.Column{
-		{Name: "operation_id", Type: field.TypeString},
+		{Name: "operation_id", Type: field.TypeInt},
 		{Name: "label_id", Type: field.TypeInt},
 	}
 	// OperationLabelsTable holds the schema information for the "operation_labels" table.

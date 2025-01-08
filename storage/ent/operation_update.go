@@ -35,9 +35,64 @@ func (ou *OperationUpdate) SetUpdateTime(t time.Time) *OperationUpdate {
 	return ou
 }
 
+// SetRequestID sets the "request_id" field.
+func (ou *OperationUpdate) SetRequestID(s string) *OperationUpdate {
+	ou.mutation.SetRequestID(s)
+	return ou
+}
+
+// SetNillableRequestID sets the "request_id" field if the given value is not nil.
+func (ou *OperationUpdate) SetNillableRequestID(s *string) *OperationUpdate {
+	if s != nil {
+		ou.SetRequestID(*s)
+	}
+	return ou
+}
+
+// SetShard sets the "shard" field.
+func (ou *OperationUpdate) SetShard(i int64) *OperationUpdate {
+	ou.mutation.ResetShard()
+	ou.mutation.SetShard(i)
+	return ou
+}
+
+// SetNillableShard sets the "shard" field if the given value is not nil.
+func (ou *OperationUpdate) SetNillableShard(i *int64) *OperationUpdate {
+	if i != nil {
+		ou.SetShard(*i)
+	}
+	return ou
+}
+
+// AddShard adds i to the "shard" field.
+func (ou *OperationUpdate) AddShard(i int64) *OperationUpdate {
+	ou.mutation.AddShard(i)
+	return ou
+}
+
 // SetDetail sets the "detail" field.
 func (ou *OperationUpdate) SetDetail(b []byte) *OperationUpdate {
 	ou.mutation.SetDetail(b)
+	return ou
+}
+
+// SetNextCheckAt sets the "next_check_at" field.
+func (ou *OperationUpdate) SetNextCheckAt(t time.Time) *OperationUpdate {
+	ou.mutation.SetNextCheckAt(t)
+	return ou
+}
+
+// SetNillableNextCheckAt sets the "next_check_at" field if the given value is not nil.
+func (ou *OperationUpdate) SetNillableNextCheckAt(t *time.Time) *OperationUpdate {
+	if t != nil {
+		ou.SetNextCheckAt(*t)
+	}
+	return ou
+}
+
+// ClearNextCheckAt clears the value of the "next_check_at" field.
+func (ou *OperationUpdate) ClearNextCheckAt() *OperationUpdate {
+	ou.mutation.ClearNextCheckAt()
 	return ou
 }
 
@@ -197,7 +252,7 @@ func (ou *OperationUpdate) defaults() {
 }
 
 func (ou *OperationUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(operation.Table, operation.Columns, sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(operation.Table, operation.Columns, sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt))
 	if ps := ou.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -208,8 +263,23 @@ func (ou *OperationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ou.mutation.UpdateTime(); ok {
 		_spec.SetField(operation.FieldUpdateTime, field.TypeTime, value)
 	}
+	if value, ok := ou.mutation.RequestID(); ok {
+		_spec.SetField(operation.FieldRequestID, field.TypeString, value)
+	}
+	if value, ok := ou.mutation.Shard(); ok {
+		_spec.SetField(operation.FieldShard, field.TypeInt64, value)
+	}
+	if value, ok := ou.mutation.AddedShard(); ok {
+		_spec.AddField(operation.FieldShard, field.TypeInt64, value)
+	}
 	if value, ok := ou.mutation.Detail(); ok {
 		_spec.SetField(operation.FieldDetail, field.TypeBytes, value)
+	}
+	if value, ok := ou.mutation.NextCheckAt(); ok {
+		_spec.SetField(operation.FieldNextCheckAt, field.TypeTime, value)
+	}
+	if ou.mutation.NextCheckAtCleared() {
+		_spec.ClearField(operation.FieldNextCheckAt, field.TypeTime)
 	}
 	if value, ok := ou.mutation.State(); ok {
 		_spec.SetField(operation.FieldState, field.TypeBytes, value)
@@ -309,9 +379,64 @@ func (ouo *OperationUpdateOne) SetUpdateTime(t time.Time) *OperationUpdateOne {
 	return ouo
 }
 
+// SetRequestID sets the "request_id" field.
+func (ouo *OperationUpdateOne) SetRequestID(s string) *OperationUpdateOne {
+	ouo.mutation.SetRequestID(s)
+	return ouo
+}
+
+// SetNillableRequestID sets the "request_id" field if the given value is not nil.
+func (ouo *OperationUpdateOne) SetNillableRequestID(s *string) *OperationUpdateOne {
+	if s != nil {
+		ouo.SetRequestID(*s)
+	}
+	return ouo
+}
+
+// SetShard sets the "shard" field.
+func (ouo *OperationUpdateOne) SetShard(i int64) *OperationUpdateOne {
+	ouo.mutation.ResetShard()
+	ouo.mutation.SetShard(i)
+	return ouo
+}
+
+// SetNillableShard sets the "shard" field if the given value is not nil.
+func (ouo *OperationUpdateOne) SetNillableShard(i *int64) *OperationUpdateOne {
+	if i != nil {
+		ouo.SetShard(*i)
+	}
+	return ouo
+}
+
+// AddShard adds i to the "shard" field.
+func (ouo *OperationUpdateOne) AddShard(i int64) *OperationUpdateOne {
+	ouo.mutation.AddShard(i)
+	return ouo
+}
+
 // SetDetail sets the "detail" field.
 func (ouo *OperationUpdateOne) SetDetail(b []byte) *OperationUpdateOne {
 	ouo.mutation.SetDetail(b)
+	return ouo
+}
+
+// SetNextCheckAt sets the "next_check_at" field.
+func (ouo *OperationUpdateOne) SetNextCheckAt(t time.Time) *OperationUpdateOne {
+	ouo.mutation.SetNextCheckAt(t)
+	return ouo
+}
+
+// SetNillableNextCheckAt sets the "next_check_at" field if the given value is not nil.
+func (ouo *OperationUpdateOne) SetNillableNextCheckAt(t *time.Time) *OperationUpdateOne {
+	if t != nil {
+		ouo.SetNextCheckAt(*t)
+	}
+	return ouo
+}
+
+// ClearNextCheckAt clears the value of the "next_check_at" field.
+func (ouo *OperationUpdateOne) ClearNextCheckAt() *OperationUpdateOne {
+	ouo.mutation.ClearNextCheckAt()
 	return ouo
 }
 
@@ -484,7 +609,7 @@ func (ouo *OperationUpdateOne) defaults() {
 }
 
 func (ouo *OperationUpdateOne) sqlSave(ctx context.Context) (_node *Operation, err error) {
-	_spec := sqlgraph.NewUpdateSpec(operation.Table, operation.Columns, sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(operation.Table, operation.Columns, sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt))
 	id, ok := ouo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Operation.id" for update`)}
@@ -512,8 +637,23 @@ func (ouo *OperationUpdateOne) sqlSave(ctx context.Context) (_node *Operation, e
 	if value, ok := ouo.mutation.UpdateTime(); ok {
 		_spec.SetField(operation.FieldUpdateTime, field.TypeTime, value)
 	}
+	if value, ok := ouo.mutation.RequestID(); ok {
+		_spec.SetField(operation.FieldRequestID, field.TypeString, value)
+	}
+	if value, ok := ouo.mutation.Shard(); ok {
+		_spec.SetField(operation.FieldShard, field.TypeInt64, value)
+	}
+	if value, ok := ouo.mutation.AddedShard(); ok {
+		_spec.AddField(operation.FieldShard, field.TypeInt64, value)
+	}
 	if value, ok := ouo.mutation.Detail(); ok {
 		_spec.SetField(operation.FieldDetail, field.TypeBytes, value)
+	}
+	if value, ok := ouo.mutation.NextCheckAt(); ok {
+		_spec.SetField(operation.FieldNextCheckAt, field.TypeTime, value)
+	}
+	if ouo.mutation.NextCheckAtCleared() {
+		_spec.ClearField(operation.FieldNextCheckAt, field.TypeTime)
 	}
 	if value, ok := ouo.mutation.State(); ok {
 		_spec.SetField(operation.FieldState, field.TypeBytes, value)

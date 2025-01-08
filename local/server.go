@@ -9,17 +9,21 @@ import (
 	"reflect"
 	"sync"
 
+	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/sync/singleflight"
+
 	"github.com/vgough/sequin"
 	"github.com/vgough/sequin/internal"
 	"github.com/vgough/sequin/registry"
-	"golang.org/x/sync/singleflight"
+	"github.com/vgough/sequin/storage"
 )
 
 var encodingKey []byte = []byte("sequin")
 var requestIDMD = internal.MDKey[string]{}
 
 type Server struct {
-	sf singleflight.Group
+	sf      singleflight.Group
+	storage storage.Store
 
 	mu sync.Mutex
 
@@ -34,10 +38,25 @@ type requestState struct {
 
 var _ sequin.Runtime = &Server{}
 
-func NewServer() *Server {
-	return &Server{
+type ServerOptions func(*Server)
+
+func WithStorage(storage storage.Store) ServerOptions {
+	return func(s *Server) {
+		s.storage = storage
+	}
+}
+
+func NewServer(opts ...ServerOptions) *Server {
+	s := &Server{
 		cache: make(map[string]*requestState),
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	if s.storage == nil {
+		s.storage = storage.NewTestObjectStore()
+	}
+	return s
 }
 
 func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Value {

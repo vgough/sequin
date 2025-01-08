@@ -49,9 +49,43 @@ func (oc *OperationCreate) SetNillableUpdateTime(t *time.Time) *OperationCreate 
 	return oc
 }
 
+// SetRequestID sets the "request_id" field.
+func (oc *OperationCreate) SetRequestID(s string) *OperationCreate {
+	oc.mutation.SetRequestID(s)
+	return oc
+}
+
+// SetShard sets the "shard" field.
+func (oc *OperationCreate) SetShard(i int64) *OperationCreate {
+	oc.mutation.SetShard(i)
+	return oc
+}
+
+// SetNillableShard sets the "shard" field if the given value is not nil.
+func (oc *OperationCreate) SetNillableShard(i *int64) *OperationCreate {
+	if i != nil {
+		oc.SetShard(*i)
+	}
+	return oc
+}
+
 // SetDetail sets the "detail" field.
 func (oc *OperationCreate) SetDetail(b []byte) *OperationCreate {
 	oc.mutation.SetDetail(b)
+	return oc
+}
+
+// SetNextCheckAt sets the "next_check_at" field.
+func (oc *OperationCreate) SetNextCheckAt(t time.Time) *OperationCreate {
+	oc.mutation.SetNextCheckAt(t)
+	return oc
+}
+
+// SetNillableNextCheckAt sets the "next_check_at" field if the given value is not nil.
+func (oc *OperationCreate) SetNillableNextCheckAt(t *time.Time) *OperationCreate {
+	if t != nil {
+		oc.SetNextCheckAt(*t)
+	}
 	return oc
 }
 
@@ -98,12 +132,6 @@ func (oc *OperationCreate) SetNillableFinishedAt(t *time.Time) *OperationCreate 
 	if t != nil {
 		oc.SetFinishedAt(*t)
 	}
-	return oc
-}
-
-// SetID sets the "id" field.
-func (oc *OperationCreate) SetID(s string) *OperationCreate {
-	oc.mutation.SetID(s)
 	return oc
 }
 
@@ -165,6 +193,10 @@ func (oc *OperationCreate) defaults() {
 		v := operation.DefaultUpdateTime()
 		oc.mutation.SetUpdateTime(v)
 	}
+	if _, ok := oc.mutation.Shard(); !ok {
+		v := operation.DefaultShard
+		oc.mutation.SetShard(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -174,6 +206,12 @@ func (oc *OperationCreate) check() error {
 	}
 	if _, ok := oc.mutation.UpdateTime(); !ok {
 		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "Operation.update_time"`)}
+	}
+	if _, ok := oc.mutation.RequestID(); !ok {
+		return &ValidationError{Name: "request_id", err: errors.New(`ent: missing required field "Operation.request_id"`)}
+	}
+	if _, ok := oc.mutation.Shard(); !ok {
+		return &ValidationError{Name: "shard", err: errors.New(`ent: missing required field "Operation.shard"`)}
 	}
 	if _, ok := oc.mutation.Detail(); !ok {
 		return &ValidationError{Name: "detail", err: errors.New(`ent: missing required field "Operation.detail"`)}
@@ -195,13 +233,8 @@ func (oc *OperationCreate) sqlSave(ctx context.Context) (*Operation, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected Operation.ID type: %T", _spec.ID.Value)
-		}
-	}
+	id := _spec.ID.Value.(int64)
+	_node.ID = int(id)
 	oc.mutation.id = &_node.ID
 	oc.mutation.done = true
 	return _node, nil
@@ -210,12 +243,8 @@ func (oc *OperationCreate) sqlSave(ctx context.Context) (*Operation, error) {
 func (oc *OperationCreate) createSpec() (*Operation, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Operation{config: oc.config}
-		_spec = sqlgraph.NewCreateSpec(operation.Table, sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString))
+		_spec = sqlgraph.NewCreateSpec(operation.Table, sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt))
 	)
-	if id, ok := oc.mutation.ID(); ok {
-		_node.ID = id
-		_spec.ID.Value = id
-	}
 	if value, ok := oc.mutation.CreateTime(); ok {
 		_spec.SetField(operation.FieldCreateTime, field.TypeTime, value)
 		_node.CreateTime = value
@@ -224,9 +253,21 @@ func (oc *OperationCreate) createSpec() (*Operation, *sqlgraph.CreateSpec) {
 		_spec.SetField(operation.FieldUpdateTime, field.TypeTime, value)
 		_node.UpdateTime = value
 	}
+	if value, ok := oc.mutation.RequestID(); ok {
+		_spec.SetField(operation.FieldRequestID, field.TypeString, value)
+		_node.RequestID = value
+	}
+	if value, ok := oc.mutation.Shard(); ok {
+		_spec.SetField(operation.FieldShard, field.TypeInt64, value)
+		_node.Shard = value
+	}
 	if value, ok := oc.mutation.Detail(); ok {
 		_spec.SetField(operation.FieldDetail, field.TypeBytes, value)
 		_node.Detail = value
+	}
+	if value, ok := oc.mutation.NextCheckAt(); ok {
+		_spec.SetField(operation.FieldNextCheckAt, field.TypeTime, value)
+		_node.NextCheckAt = value
 	}
 	if value, ok := oc.mutation.State(); ok {
 		_spec.SetField(operation.FieldState, field.TypeBytes, value)
@@ -312,6 +353,10 @@ func (ocb *OperationCreateBulk) Save(ctx context.Context) ([]*Operation, error) 
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
+				if specs[i].ID.Value != nil {
+					id := specs[i].ID.Value.(int64)
+					nodes[i].ID = int(id)
+				}
 				mutation.done = true
 				return nodes[i], nil
 			})

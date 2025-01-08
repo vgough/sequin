@@ -57,14 +57,14 @@ func (lu *LabelUpdate) SetNillableValue(s *string) *LabelUpdate {
 }
 
 // AddOperationIDs adds the "operation" edge to the Operation entity by IDs.
-func (lu *LabelUpdate) AddOperationIDs(ids ...string) *LabelUpdate {
+func (lu *LabelUpdate) AddOperationIDs(ids ...int) *LabelUpdate {
 	lu.mutation.AddOperationIDs(ids...)
 	return lu
 }
 
 // AddOperation adds the "operation" edges to the Operation entity.
 func (lu *LabelUpdate) AddOperation(o ...*Operation) *LabelUpdate {
-	ids := make([]string, len(o))
+	ids := make([]int, len(o))
 	for i := range o {
 		ids[i] = o[i].ID
 	}
@@ -83,14 +83,14 @@ func (lu *LabelUpdate) ClearOperation() *LabelUpdate {
 }
 
 // RemoveOperationIDs removes the "operation" edge to Operation entities by IDs.
-func (lu *LabelUpdate) RemoveOperationIDs(ids ...string) *LabelUpdate {
+func (lu *LabelUpdate) RemoveOperationIDs(ids ...int) *LabelUpdate {
 	lu.mutation.RemoveOperationIDs(ids...)
 	return lu
 }
 
 // RemoveOperation removes "operation" edges to Operation entities.
 func (lu *LabelUpdate) RemoveOperation(o ...*Operation) *LabelUpdate {
-	ids := make([]string, len(o))
+	ids := make([]int, len(o))
 	for i := range o {
 		ids[i] = o[i].ID
 	}
@@ -147,7 +147,7 @@ func (lu *LabelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: label.OperationPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -160,7 +160,7 @@ func (lu *LabelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: label.OperationPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -176,7 +176,7 @@ func (lu *LabelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: label.OperationPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -233,14 +233,14 @@ func (luo *LabelUpdateOne) SetNillableValue(s *string) *LabelUpdateOne {
 }
 
 // AddOperationIDs adds the "operation" edge to the Operation entity by IDs.
-func (luo *LabelUpdateOne) AddOperationIDs(ids ...string) *LabelUpdateOne {
+func (luo *LabelUpdateOne) AddOperationIDs(ids ...int) *LabelUpdateOne {
 	luo.mutation.AddOperationIDs(ids...)
 	return luo
 }
 
 // AddOperation adds the "operation" edges to the Operation entity.
 func (luo *LabelUpdateOne) AddOperation(o ...*Operation) *LabelUpdateOne {
-	ids := make([]string, len(o))
+	ids := make([]int, len(o))
 	for i := range o {
 		ids[i] = o[i].ID
 	}
@@ -259,14 +259,14 @@ func (luo *LabelUpdateOne) ClearOperation() *LabelUpdateOne {
 }
 
 // RemoveOperationIDs removes the "operation" edge to Operation entities by IDs.
-func (luo *LabelUpdateOne) RemoveOperationIDs(ids ...string) *LabelUpdateOne {
+func (luo *LabelUpdateOne) RemoveOperationIDs(ids ...int) *LabelUpdateOne {
 	luo.mutation.RemoveOperationIDs(ids...)
 	return luo
 }
 
 // RemoveOperation removes "operation" edges to Operation entities.
 func (luo *LabelUpdateOne) RemoveOperation(o ...*Operation) *LabelUpdateOne {
-	ids := make([]string, len(o))
+	ids := make([]int, len(o))
 	for i := range o {
 		ids[i] = o[i].ID
 	}
@@ -353,7 +353,7 @@ func (luo *LabelUpdateOne) sqlSave(ctx context.Context) (_node *Label, err error
 			Columns: label.OperationPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -366,7 +366,7 @@ func (luo *LabelUpdateOne) sqlSave(ctx context.Context) (_node *Label, err error
 			Columns: label.OperationPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -382,7 +382,7 @@ func (luo *LabelUpdateOne) sqlSave(ctx context.Context) (_node *Label, err error
 			Columns: label.OperationPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

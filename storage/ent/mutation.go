@@ -38,8 +38,8 @@ type LabelMutation struct {
 	name             *string
 	value            *string
 	clearedFields    map[string]struct{}
-	operation        map[string]struct{}
-	removedoperation map[string]struct{}
+	operation        map[int]struct{}
+	removedoperation map[int]struct{}
 	clearedoperation bool
 	done             bool
 	oldValue         func(context.Context) (*Label, error)
@@ -217,9 +217,9 @@ func (m *LabelMutation) ResetValue() {
 }
 
 // AddOperationIDs adds the "operation" edge to the Operation entity by ids.
-func (m *LabelMutation) AddOperationIDs(ids ...string) {
+func (m *LabelMutation) AddOperationIDs(ids ...int) {
 	if m.operation == nil {
-		m.operation = make(map[string]struct{})
+		m.operation = make(map[int]struct{})
 	}
 	for i := range ids {
 		m.operation[ids[i]] = struct{}{}
@@ -237,9 +237,9 @@ func (m *LabelMutation) OperationCleared() bool {
 }
 
 // RemoveOperationIDs removes the "operation" edge to the Operation entity by IDs.
-func (m *LabelMutation) RemoveOperationIDs(ids ...string) {
+func (m *LabelMutation) RemoveOperationIDs(ids ...int) {
 	if m.removedoperation == nil {
-		m.removedoperation = make(map[string]struct{})
+		m.removedoperation = make(map[int]struct{})
 	}
 	for i := range ids {
 		delete(m.operation, ids[i])
@@ -248,7 +248,7 @@ func (m *LabelMutation) RemoveOperationIDs(ids ...string) {
 }
 
 // RemovedOperation returns the removed IDs of the "operation" edge to the Operation entity.
-func (m *LabelMutation) RemovedOperationIDs() (ids []string) {
+func (m *LabelMutation) RemovedOperationIDs() (ids []int) {
 	for id := range m.removedoperation {
 		ids = append(ids, id)
 	}
@@ -256,7 +256,7 @@ func (m *LabelMutation) RemovedOperationIDs() (ids []string) {
 }
 
 // OperationIDs returns the "operation" edge IDs in the mutation.
-func (m *LabelMutation) OperationIDs() (ids []string) {
+func (m *LabelMutation) OperationIDs() (ids []int) {
 	for id := range m.operation {
 		ids = append(ids, id)
 	}
@@ -507,10 +507,14 @@ type OperationMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *string
+	id            *int
 	create_time   *time.Time
 	update_time   *time.Time
+	request_id    *string
+	shard         *int64
+	addshard      *int64
 	detail        *[]byte
+	next_check_at *time.Time
 	state         *[]byte
 	result        *[]byte
 	submitter     *string
@@ -545,7 +549,7 @@ func newOperationMutation(c config, op Op, opts ...operationOption) *OperationMu
 }
 
 // withOperationID sets the ID field of the mutation.
-func withOperationID(id string) operationOption {
+func withOperationID(id int) operationOption {
 	return func(m *OperationMutation) {
 		var (
 			err   error
@@ -595,15 +599,9 @@ func (m OperationMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
-// SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of Operation entities.
-func (m *OperationMutation) SetID(id string) {
-	m.id = &id
-}
-
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *OperationMutation) ID() (id string, exists bool) {
+func (m *OperationMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -614,12 +612,12 @@ func (m *OperationMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *OperationMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *OperationMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []string{id}, nil
+			return []int{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -701,6 +699,98 @@ func (m *OperationMutation) ResetUpdateTime() {
 	m.update_time = nil
 }
 
+// SetRequestID sets the "request_id" field.
+func (m *OperationMutation) SetRequestID(s string) {
+	m.request_id = &s
+}
+
+// RequestID returns the value of the "request_id" field in the mutation.
+func (m *OperationMutation) RequestID() (r string, exists bool) {
+	v := m.request_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestID returns the old "request_id" field's value of the Operation entity.
+// If the Operation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationMutation) OldRequestID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestID: %w", err)
+	}
+	return oldValue.RequestID, nil
+}
+
+// ResetRequestID resets all changes to the "request_id" field.
+func (m *OperationMutation) ResetRequestID() {
+	m.request_id = nil
+}
+
+// SetShard sets the "shard" field.
+func (m *OperationMutation) SetShard(i int64) {
+	m.shard = &i
+	m.addshard = nil
+}
+
+// Shard returns the value of the "shard" field in the mutation.
+func (m *OperationMutation) Shard() (r int64, exists bool) {
+	v := m.shard
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldShard returns the old "shard" field's value of the Operation entity.
+// If the Operation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationMutation) OldShard(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldShard is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldShard requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldShard: %w", err)
+	}
+	return oldValue.Shard, nil
+}
+
+// AddShard adds i to the "shard" field.
+func (m *OperationMutation) AddShard(i int64) {
+	if m.addshard != nil {
+		*m.addshard += i
+	} else {
+		m.addshard = &i
+	}
+}
+
+// AddedShard returns the value that was added to the "shard" field in this mutation.
+func (m *OperationMutation) AddedShard() (r int64, exists bool) {
+	v := m.addshard
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetShard resets all changes to the "shard" field.
+func (m *OperationMutation) ResetShard() {
+	m.shard = nil
+	m.addshard = nil
+}
+
 // SetDetail sets the "detail" field.
 func (m *OperationMutation) SetDetail(b []byte) {
 	m.detail = &b
@@ -735,6 +825,55 @@ func (m *OperationMutation) OldDetail(ctx context.Context) (v []byte, err error)
 // ResetDetail resets all changes to the "detail" field.
 func (m *OperationMutation) ResetDetail() {
 	m.detail = nil
+}
+
+// SetNextCheckAt sets the "next_check_at" field.
+func (m *OperationMutation) SetNextCheckAt(t time.Time) {
+	m.next_check_at = &t
+}
+
+// NextCheckAt returns the value of the "next_check_at" field in the mutation.
+func (m *OperationMutation) NextCheckAt() (r time.Time, exists bool) {
+	v := m.next_check_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNextCheckAt returns the old "next_check_at" field's value of the Operation entity.
+// If the Operation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OperationMutation) OldNextCheckAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNextCheckAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNextCheckAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNextCheckAt: %w", err)
+	}
+	return oldValue.NextCheckAt, nil
+}
+
+// ClearNextCheckAt clears the value of the "next_check_at" field.
+func (m *OperationMutation) ClearNextCheckAt() {
+	m.next_check_at = nil
+	m.clearedFields[operation.FieldNextCheckAt] = struct{}{}
+}
+
+// NextCheckAtCleared returns if the "next_check_at" field was cleared in this mutation.
+func (m *OperationMutation) NextCheckAtCleared() bool {
+	_, ok := m.clearedFields[operation.FieldNextCheckAt]
+	return ok
+}
+
+// ResetNextCheckAt resets all changes to the "next_check_at" field.
+func (m *OperationMutation) ResetNextCheckAt() {
+	m.next_check_at = nil
+	delete(m.clearedFields, operation.FieldNextCheckAt)
 }
 
 // SetState sets the "state" field.
@@ -1057,15 +1196,24 @@ func (m *OperationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OperationMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 11)
 	if m.create_time != nil {
 		fields = append(fields, operation.FieldCreateTime)
 	}
 	if m.update_time != nil {
 		fields = append(fields, operation.FieldUpdateTime)
 	}
+	if m.request_id != nil {
+		fields = append(fields, operation.FieldRequestID)
+	}
+	if m.shard != nil {
+		fields = append(fields, operation.FieldShard)
+	}
 	if m.detail != nil {
 		fields = append(fields, operation.FieldDetail)
+	}
+	if m.next_check_at != nil {
+		fields = append(fields, operation.FieldNextCheckAt)
 	}
 	if m.state != nil {
 		fields = append(fields, operation.FieldState)
@@ -1094,8 +1242,14 @@ func (m *OperationMutation) Field(name string) (ent.Value, bool) {
 		return m.CreateTime()
 	case operation.FieldUpdateTime:
 		return m.UpdateTime()
+	case operation.FieldRequestID:
+		return m.RequestID()
+	case operation.FieldShard:
+		return m.Shard()
 	case operation.FieldDetail:
 		return m.Detail()
+	case operation.FieldNextCheckAt:
+		return m.NextCheckAt()
 	case operation.FieldState:
 		return m.State()
 	case operation.FieldResult:
@@ -1119,8 +1273,14 @@ func (m *OperationMutation) OldField(ctx context.Context, name string) (ent.Valu
 		return m.OldCreateTime(ctx)
 	case operation.FieldUpdateTime:
 		return m.OldUpdateTime(ctx)
+	case operation.FieldRequestID:
+		return m.OldRequestID(ctx)
+	case operation.FieldShard:
+		return m.OldShard(ctx)
 	case operation.FieldDetail:
 		return m.OldDetail(ctx)
+	case operation.FieldNextCheckAt:
+		return m.OldNextCheckAt(ctx)
 	case operation.FieldState:
 		return m.OldState(ctx)
 	case operation.FieldResult:
@@ -1154,12 +1314,33 @@ func (m *OperationMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdateTime(v)
 		return nil
+	case operation.FieldRequestID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestID(v)
+		return nil
+	case operation.FieldShard:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetShard(v)
+		return nil
 	case operation.FieldDetail:
 		v, ok := value.([]byte)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDetail(v)
+		return nil
+	case operation.FieldNextCheckAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNextCheckAt(v)
 		return nil
 	case operation.FieldState:
 		v, ok := value.([]byte)
@@ -1203,13 +1384,21 @@ func (m *OperationMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *OperationMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addshard != nil {
+		fields = append(fields, operation.FieldShard)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *OperationMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case operation.FieldShard:
+		return m.AddedShard()
+	}
 	return nil, false
 }
 
@@ -1218,6 +1407,13 @@ func (m *OperationMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *OperationMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case operation.FieldShard:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddShard(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Operation numeric field %s", name)
 }
@@ -1226,6 +1422,9 @@ func (m *OperationMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *OperationMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(operation.FieldNextCheckAt) {
+		fields = append(fields, operation.FieldNextCheckAt)
+	}
 	if m.FieldCleared(operation.FieldState) {
 		fields = append(fields, operation.FieldState)
 	}
@@ -1252,6 +1451,9 @@ func (m *OperationMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *OperationMutation) ClearField(name string) error {
 	switch name {
+	case operation.FieldNextCheckAt:
+		m.ClearNextCheckAt()
+		return nil
 	case operation.FieldState:
 		m.ClearState()
 		return nil
@@ -1278,8 +1480,17 @@ func (m *OperationMutation) ResetField(name string) error {
 	case operation.FieldUpdateTime:
 		m.ResetUpdateTime()
 		return nil
+	case operation.FieldRequestID:
+		m.ResetRequestID()
+		return nil
+	case operation.FieldShard:
+		m.ResetShard()
+		return nil
 	case operation.FieldDetail:
 		m.ResetDetail()
+		return nil
+	case operation.FieldNextCheckAt:
+		m.ResetNextCheckAt()
 		return nil
 	case operation.FieldState:
 		m.ResetState()

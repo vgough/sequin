@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"hash/fnv"
 	"log"
 
 	sequinv1 "github.com/vgough/sequin/gen/sequin/v1"
@@ -16,6 +17,10 @@ type ObjStore struct {
 	db *ent.Client
 }
 
+// NewTestObjectStore creates a new in-memory object store for testing.
+// If using this, you must import the sqlite driver:
+//
+//	import _ "github.com/mattn/go-sqlite3"
 func NewTestObjectStore() *ObjStore {
 	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	if err != nil {
@@ -42,8 +47,11 @@ func (o *ObjStore) AddOperation(ctx context.Context, req *sequinv1.Operation,
 		return err
 	}
 
+	shard := shardFromRequestID(req.RequestId, 1000)
+
 	_, err = o.db.Operation.Create().
-		SetID(req.RequestId).
+		SetRequestID(req.RequestId).
+		SetShard(shard).
 		SetDetail(detail).
 		SetSubmitter(submitter).
 		Save(ctx)
@@ -64,13 +72,23 @@ func (o *ObjStore) AddOperation(ctx context.Context, req *sequinv1.Operation,
 // 	return err
 // }
 
+func shardFromRequestID(requestID string, maxShards int64) int64 {
+	hash := fnv.New64()
+	hash.Write([]byte(requestID))
+	// Set bottom two bits to 0 to allow for shard changes in the future.
+	id := hash.Sum64() &^ 3
+	return int64(id) % maxShards
+}
+
 // GetOperation implements Store.
 func (o *ObjStore) GetOperation(ctx context.Context,
 	requestID string) (*sequinv1.Operation, error) {
 
+	shard := shardFromRequestID(requestID, 1000)
+
 	entop, err := o.db.Operation.Query().
 		Select(operation.FieldDetail).
-		Where(operation.ID(requestID)).
+		Where(operation.Shard(shard), operation.RequestID(requestID)).
 		Only(ctx)
 	if err != nil {
 		return nil, err
@@ -89,9 +107,11 @@ func (o *ObjStore) GetOperation(ctx context.Context,
 func (o *ObjStore) GetState(ctx context.Context,
 	requestID string) (*sequinv1.OperationState, error) {
 
+	shard := shardFromRequestID(requestID, 1000)
+
 	entop, err := o.db.Operation.Query().
 		Select(operation.FieldState).
-		Where(operation.ID(requestID)).
+		Where(operation.Shard(shard), operation.RequestID(requestID)).
 		Only(ctx)
 	if err != nil {
 		return nil, err
@@ -105,6 +125,8 @@ func (o *ObjStore) GetState(ctx context.Context,
 // SetState implements Store.
 func (o *ObjStore) SetState(ctx context.Context,
 	requestID string, state *sequinv1.OperationState) error {
+
+	shard := shardFromRequestID(requestID, 1000)
 
 	stateData, err := proto.Marshal(state)
 	if err != nil {
@@ -120,7 +142,7 @@ func (o *ObjStore) SetState(ctx context.Context,
 	// Check that the operation exists and is not done.
 	entop, err := tx.Operation.Query().
 		Select(operation.FieldResult, operation.FieldState).
-		Where(operation.ID(requestID)).
+		Where(operation.Shard(shard), operation.RequestID(requestID)).
 		Only(ctx)
 	if err != nil {
 		return err
@@ -165,7 +187,7 @@ func (o *ObjStore) SetResult(ctx context.Context,
 
 	entop, err := tx.Operation.Query().
 		Select(operation.FieldResult).
-		Where(operation.ID(requestID)).
+		Where(operation.RequestID(requestID)).
 		Only(ctx)
 	if err != nil {
 		return err
@@ -186,7 +208,7 @@ func (o *ObjStore) GetResult(ctx context.Context,
 
 	entop, err := o.db.Operation.Query().
 		Select(operation.FieldResult).
-		Where(operation.ID(requestID)).
+		Where(operation.RequestID(requestID)).
 		Only(ctx)
 	if err != nil {
 		return false, nil, err

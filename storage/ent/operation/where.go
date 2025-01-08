@@ -11,58 +11,48 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id string) predicate.Operation {
+func ID(id int) predicate.Operation {
 	return predicate.Operation(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id string) predicate.Operation {
+func IDEQ(id int) predicate.Operation {
 	return predicate.Operation(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id string) predicate.Operation {
+func IDNEQ(id int) predicate.Operation {
 	return predicate.Operation(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...string) predicate.Operation {
+func IDIn(ids ...int) predicate.Operation {
 	return predicate.Operation(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...string) predicate.Operation {
+func IDNotIn(ids ...int) predicate.Operation {
 	return predicate.Operation(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id string) predicate.Operation {
+func IDGT(id int) predicate.Operation {
 	return predicate.Operation(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id string) predicate.Operation {
+func IDGTE(id int) predicate.Operation {
 	return predicate.Operation(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id string) predicate.Operation {
+func IDLT(id int) predicate.Operation {
 	return predicate.Operation(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id string) predicate.Operation {
+func IDLTE(id int) predicate.Operation {
 	return predicate.Operation(sql.FieldLTE(FieldID, id))
-}
-
-// IDEqualFold applies the EqualFold predicate on the ID field.
-func IDEqualFold(id string) predicate.Operation {
-	return predicate.Operation(sql.FieldEqualFold(FieldID, id))
-}
-
-// IDContainsFold applies the ContainsFold predicate on the ID field.
-func IDContainsFold(id string) predicate.Operation {
-	return predicate.Operation(sql.FieldContainsFold(FieldID, id))
 }
 
 // CreateTime applies equality check predicate on the "create_time" field. It's identical to CreateTimeEQ.
@@ -75,9 +65,24 @@ func UpdateTime(v time.Time) predicate.Operation {
 	return predicate.Operation(sql.FieldEQ(FieldUpdateTime, v))
 }
 
+// RequestID applies equality check predicate on the "request_id" field. It's identical to RequestIDEQ.
+func RequestID(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldRequestID, v))
+}
+
+// Shard applies equality check predicate on the "shard" field. It's identical to ShardEQ.
+func Shard(v int64) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldShard, v))
+}
+
 // Detail applies equality check predicate on the "detail" field. It's identical to DetailEQ.
 func Detail(v []byte) predicate.Operation {
 	return predicate.Operation(sql.FieldEQ(FieldDetail, v))
+}
+
+// NextCheckAt applies equality check predicate on the "next_check_at" field. It's identical to NextCheckAtEQ.
+func NextCheckAt(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldNextCheckAt, v))
 }
 
 // State applies equality check predicate on the "state" field. It's identical to StateEQ.
@@ -185,6 +190,111 @@ func UpdateTimeLTE(v time.Time) predicate.Operation {
 	return predicate.Operation(sql.FieldLTE(FieldUpdateTime, v))
 }
 
+// RequestIDEQ applies the EQ predicate on the "request_id" field.
+func RequestIDEQ(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldRequestID, v))
+}
+
+// RequestIDNEQ applies the NEQ predicate on the "request_id" field.
+func RequestIDNEQ(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldNEQ(FieldRequestID, v))
+}
+
+// RequestIDIn applies the In predicate on the "request_id" field.
+func RequestIDIn(vs ...string) predicate.Operation {
+	return predicate.Operation(sql.FieldIn(FieldRequestID, vs...))
+}
+
+// RequestIDNotIn applies the NotIn predicate on the "request_id" field.
+func RequestIDNotIn(vs ...string) predicate.Operation {
+	return predicate.Operation(sql.FieldNotIn(FieldRequestID, vs...))
+}
+
+// RequestIDGT applies the GT predicate on the "request_id" field.
+func RequestIDGT(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldGT(FieldRequestID, v))
+}
+
+// RequestIDGTE applies the GTE predicate on the "request_id" field.
+func RequestIDGTE(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldGTE(FieldRequestID, v))
+}
+
+// RequestIDLT applies the LT predicate on the "request_id" field.
+func RequestIDLT(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldLT(FieldRequestID, v))
+}
+
+// RequestIDLTE applies the LTE predicate on the "request_id" field.
+func RequestIDLTE(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldLTE(FieldRequestID, v))
+}
+
+// RequestIDContains applies the Contains predicate on the "request_id" field.
+func RequestIDContains(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldContains(FieldRequestID, v))
+}
+
+// RequestIDHasPrefix applies the HasPrefix predicate on the "request_id" field.
+func RequestIDHasPrefix(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldHasPrefix(FieldRequestID, v))
+}
+
+// RequestIDHasSuffix applies the HasSuffix predicate on the "request_id" field.
+func RequestIDHasSuffix(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldHasSuffix(FieldRequestID, v))
+}
+
+// RequestIDEqualFold applies the EqualFold predicate on the "request_id" field.
+func RequestIDEqualFold(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldEqualFold(FieldRequestID, v))
+}
+
+// RequestIDContainsFold applies the ContainsFold predicate on the "request_id" field.
+func RequestIDContainsFold(v string) predicate.Operation {
+	return predicate.Operation(sql.FieldContainsFold(FieldRequestID, v))
+}
+
+// ShardEQ applies the EQ predicate on the "shard" field.
+func ShardEQ(v int64) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldShard, v))
+}
+
+// ShardNEQ applies the NEQ predicate on the "shard" field.
+func ShardNEQ(v int64) predicate.Operation {
+	return predicate.Operation(sql.FieldNEQ(FieldShard, v))
+}
+
+// ShardIn applies the In predicate on the "shard" field.
+func ShardIn(vs ...int64) predicate.Operation {
+	return predicate.Operation(sql.FieldIn(FieldShard, vs...))
+}
+
+// ShardNotIn applies the NotIn predicate on the "shard" field.
+func ShardNotIn(vs ...int64) predicate.Operation {
+	return predicate.Operation(sql.FieldNotIn(FieldShard, vs...))
+}
+
+// ShardGT applies the GT predicate on the "shard" field.
+func ShardGT(v int64) predicate.Operation {
+	return predicate.Operation(sql.FieldGT(FieldShard, v))
+}
+
+// ShardGTE applies the GTE predicate on the "shard" field.
+func ShardGTE(v int64) predicate.Operation {
+	return predicate.Operation(sql.FieldGTE(FieldShard, v))
+}
+
+// ShardLT applies the LT predicate on the "shard" field.
+func ShardLT(v int64) predicate.Operation {
+	return predicate.Operation(sql.FieldLT(FieldShard, v))
+}
+
+// ShardLTE applies the LTE predicate on the "shard" field.
+func ShardLTE(v int64) predicate.Operation {
+	return predicate.Operation(sql.FieldLTE(FieldShard, v))
+}
+
 // DetailEQ applies the EQ predicate on the "detail" field.
 func DetailEQ(v []byte) predicate.Operation {
 	return predicate.Operation(sql.FieldEQ(FieldDetail, v))
@@ -223,6 +333,56 @@ func DetailLT(v []byte) predicate.Operation {
 // DetailLTE applies the LTE predicate on the "detail" field.
 func DetailLTE(v []byte) predicate.Operation {
 	return predicate.Operation(sql.FieldLTE(FieldDetail, v))
+}
+
+// NextCheckAtEQ applies the EQ predicate on the "next_check_at" field.
+func NextCheckAtEQ(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldEQ(FieldNextCheckAt, v))
+}
+
+// NextCheckAtNEQ applies the NEQ predicate on the "next_check_at" field.
+func NextCheckAtNEQ(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldNEQ(FieldNextCheckAt, v))
+}
+
+// NextCheckAtIn applies the In predicate on the "next_check_at" field.
+func NextCheckAtIn(vs ...time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldIn(FieldNextCheckAt, vs...))
+}
+
+// NextCheckAtNotIn applies the NotIn predicate on the "next_check_at" field.
+func NextCheckAtNotIn(vs ...time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldNotIn(FieldNextCheckAt, vs...))
+}
+
+// NextCheckAtGT applies the GT predicate on the "next_check_at" field.
+func NextCheckAtGT(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldGT(FieldNextCheckAt, v))
+}
+
+// NextCheckAtGTE applies the GTE predicate on the "next_check_at" field.
+func NextCheckAtGTE(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldGTE(FieldNextCheckAt, v))
+}
+
+// NextCheckAtLT applies the LT predicate on the "next_check_at" field.
+func NextCheckAtLT(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldLT(FieldNextCheckAt, v))
+}
+
+// NextCheckAtLTE applies the LTE predicate on the "next_check_at" field.
+func NextCheckAtLTE(v time.Time) predicate.Operation {
+	return predicate.Operation(sql.FieldLTE(FieldNextCheckAt, v))
+}
+
+// NextCheckAtIsNil applies the IsNil predicate on the "next_check_at" field.
+func NextCheckAtIsNil() predicate.Operation {
+	return predicate.Operation(sql.FieldIsNull(FieldNextCheckAt))
+}
+
+// NextCheckAtNotNil applies the NotNil predicate on the "next_check_at" field.
+func NextCheckAtNotNil() predicate.Operation {
+	return predicate.Operation(sql.FieldNotNull(FieldNextCheckAt))
 }
 
 // StateEQ applies the EQ predicate on the "state" field.

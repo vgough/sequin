@@ -406,7 +406,7 @@ func (lq *LabelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Label,
 func (lq *LabelQuery) loadOperation(ctx context.Context, query *OperationQuery, nodes []*Label, init func(*Label), assign func(*Label, *Operation)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[int]*Label)
-	nids := make(map[string]map[*Label]struct{})
+	nids := make(map[int]map[*Label]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -439,7 +439,7 @@ func (lq *LabelQuery) loadOperation(ctx context.Context, query *OperationQuery, 
 			}
 			spec.Assign = func(columns []string, values []any) error {
 				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := values[1].(*sql.NullString).String
+				inValue := int(values[1].(*sql.NullInt64).Int64)
 				if nids[inValue] == nil {
 					nids[inValue] = map[*Label]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])

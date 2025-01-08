@@ -16,13 +16,19 @@ import (
 type Operation struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
 	// CreateTime holds the value of the "create_time" field.
 	CreateTime time.Time `json:"create_time,omitempty"`
 	// UpdateTime holds the value of the "update_time" field.
 	UpdateTime time.Time `json:"update_time,omitempty"`
+	// RequestID holds the value of the "request_id" field.
+	RequestID string `json:"request_id,omitempty"`
+	// Shard holds the value of the "shard" field.
+	Shard int64 `json:"shard,omitempty"`
 	// Detail holds the value of the "detail" field.
 	Detail []byte `json:"detail,omitempty"`
+	// NextCheckAt holds the value of the "next_check_at" field.
+	NextCheckAt time.Time `json:"next_check_at,omitempty"`
 	// State holds the value of the "state" field.
 	State []byte `json:"state,omitempty"`
 	// Result holds the value of the "result" field.
@@ -64,9 +70,11 @@ func (*Operation) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case operation.FieldDetail, operation.FieldState, operation.FieldResult:
 			values[i] = new([]byte)
-		case operation.FieldID, operation.FieldSubmitter:
+		case operation.FieldID, operation.FieldShard:
+			values[i] = new(sql.NullInt64)
+		case operation.FieldRequestID, operation.FieldSubmitter:
 			values[i] = new(sql.NullString)
-		case operation.FieldCreateTime, operation.FieldUpdateTime, operation.FieldStartedAt, operation.FieldFinishedAt:
+		case operation.FieldCreateTime, operation.FieldUpdateTime, operation.FieldNextCheckAt, operation.FieldStartedAt, operation.FieldFinishedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -84,11 +92,11 @@ func (o *Operation) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case operation.FieldID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value.Valid {
-				o.ID = value.String
+			value, ok := values[i].(*sql.NullInt64)
+			if !ok {
+				return fmt.Errorf("unexpected type %T for field id", value)
 			}
+			o.ID = int(value.Int64)
 		case operation.FieldCreateTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field create_time", values[i])
@@ -101,11 +109,29 @@ func (o *Operation) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				o.UpdateTime = value.Time
 			}
+		case operation.FieldRequestID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field request_id", values[i])
+			} else if value.Valid {
+				o.RequestID = value.String
+			}
+		case operation.FieldShard:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field shard", values[i])
+			} else if value.Valid {
+				o.Shard = value.Int64
+			}
 		case operation.FieldDetail:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field detail", values[i])
 			} else if value != nil {
 				o.Detail = *value
+			}
+		case operation.FieldNextCheckAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field next_check_at", values[i])
+			} else if value.Valid {
+				o.NextCheckAt = value.Time
 			}
 		case operation.FieldState:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -184,8 +210,17 @@ func (o *Operation) String() string {
 	builder.WriteString("update_time=")
 	builder.WriteString(o.UpdateTime.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("request_id=")
+	builder.WriteString(o.RequestID)
+	builder.WriteString(", ")
+	builder.WriteString("shard=")
+	builder.WriteString(fmt.Sprintf("%v", o.Shard))
+	builder.WriteString(", ")
 	builder.WriteString("detail=")
 	builder.WriteString(fmt.Sprintf("%v", o.Detail))
+	builder.WriteString(", ")
+	builder.WriteString("next_check_at=")
+	builder.WriteString(o.NextCheckAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("state=")
 	builder.WriteString(fmt.Sprintf("%v", o.State))

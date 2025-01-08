@@ -28,4 +28,8 @@ func init() {
 	operation.DefaultUpdateTime = operationDescUpdateTime.Default.(func() time.Time)
 	// operation.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
 	operation.UpdateDefaultUpdateTime = operationDescUpdateTime.UpdateDefault.(func() time.Time)
+	// operationDescShard is the schema descriptor for shard field.
+	operationDescShard := operationFields[1].Descriptor()
+	// operation.DefaultShard holds the default value on creation for the shard field.
+	operation.DefaultShard = operationDescShard.Default.(int64)
 }

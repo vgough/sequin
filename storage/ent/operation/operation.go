@@ -18,8 +18,14 @@ const (
 	FieldCreateTime = "create_time"
 	// FieldUpdateTime holds the string denoting the update_time field in the database.
 	FieldUpdateTime = "update_time"
+	// FieldRequestID holds the string denoting the request_id field in the database.
+	FieldRequestID = "request_id"
+	// FieldShard holds the string denoting the shard field in the database.
+	FieldShard = "shard"
 	// FieldDetail holds the string denoting the detail field in the database.
 	FieldDetail = "detail"
+	// FieldNextCheckAt holds the string denoting the next_check_at field in the database.
+	FieldNextCheckAt = "next_check_at"
 	// FieldState holds the string denoting the state field in the database.
 	FieldState = "state"
 	// FieldResult holds the string denoting the result field in the database.
@@ -46,7 +52,10 @@ var Columns = []string{
 	FieldID,
 	FieldCreateTime,
 	FieldUpdateTime,
+	FieldRequestID,
+	FieldShard,
 	FieldDetail,
+	FieldNextCheckAt,
 	FieldState,
 	FieldResult,
 	FieldSubmitter,
@@ -77,6 +86,8 @@ var (
 	DefaultUpdateTime func() time.Time
 	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
 	UpdateDefaultUpdateTime func() time.Time
+	// DefaultShard holds the default value on creation for the "shard" field.
+	DefaultShard int64
 )
 
 // OrderOption defines the ordering options for the Operation queries.
@@ -95,6 +106,21 @@ func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdateTime orders the results by the update_time field.
 func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
+}
+
+// ByRequestID orders the results by the request_id field.
+func ByRequestID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRequestID, opts...).ToFunc()
+}
+
+// ByShard orders the results by the shard field.
+func ByShard(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldShard, opts...).ToFunc()
+}
+
+// ByNextCheckAt orders the results by the next_check_at field.
+func ByNextCheckAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNextCheckAt, opts...).ToFunc()
 }
 
 // BySubmitter orders the results by the submitter field.

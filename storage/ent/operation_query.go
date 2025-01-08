@@ -107,8 +107,8 @@ func (oq *OperationQuery) FirstX(ctx context.Context) *Operation {
 
 // FirstID returns the first Operation ID from the query.
 // Returns a *NotFoundError when no Operation ID was found.
-func (oq *OperationQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (oq *OperationQuery) FirstID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = oq.Limit(1).IDs(setContextOp(ctx, oq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (oq *OperationQuery) FirstID(ctx context.Context) (id string, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (oq *OperationQuery) FirstIDX(ctx context.Context) string {
+func (oq *OperationQuery) FirstIDX(ctx context.Context) int {
 	id, err := oq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +158,8 @@ func (oq *OperationQuery) OnlyX(ctx context.Context) *Operation {
 // OnlyID is like Only, but returns the only Operation ID in the query.
 // Returns a *NotSingularError when more than one Operation ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (oq *OperationQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (oq *OperationQuery) OnlyID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = oq.Limit(2).IDs(setContextOp(ctx, oq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -175,7 +175,7 @@ func (oq *OperationQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (oq *OperationQuery) OnlyIDX(ctx context.Context) string {
+func (oq *OperationQuery) OnlyIDX(ctx context.Context) int {
 	id, err := oq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +203,7 @@ func (oq *OperationQuery) AllX(ctx context.Context) []*Operation {
 }
 
 // IDs executes the query and returns a list of Operation IDs.
-func (oq *OperationQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (oq *OperationQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if oq.ctx.Unique == nil && oq.path != nil {
 		oq.Unique(true)
 	}
@@ -215,7 +215,7 @@ func (oq *OperationQuery) IDs(ctx context.Context) (ids []string, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (oq *OperationQuery) IDsX(ctx context.Context) []string {
+func (oq *OperationQuery) IDsX(ctx context.Context) []int {
 	ids, err := oq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -405,7 +405,7 @@ func (oq *OperationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Op
 
 func (oq *OperationQuery) loadLabels(ctx context.Context, query *LabelQuery, nodes []*Operation, init func(*Operation), assign func(*Operation, *Label)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[string]*Operation)
+	byID := make(map[int]*Operation)
 	nids := make(map[int]map[*Operation]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
@@ -435,10 +435,10 @@ func (oq *OperationQuery) loadLabels(ctx context.Context, query *LabelQuery, nod
 				if err != nil {
 					return nil, err
 				}
-				return append([]any{new(sql.NullString)}, values...), nil
+				return append([]any{new(sql.NullInt64)}, values...), nil
 			}
 			spec.Assign = func(columns []string, values []any) error {
-				outValue := values[0].(*sql.NullString).String
+				outValue := int(values[0].(*sql.NullInt64).Int64)
 				inValue := int(values[1].(*sql.NullInt64).Int64)
 				if nids[inValue] == nil {
 					nids[inValue] = map[*Operation]struct{}{byID[outValue]: {}}
@@ -475,7 +475,7 @@ func (oq *OperationQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (oq *OperationQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(operation.Table, operation.Columns, sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(operation.Table, operation.Columns, sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt))
 	_spec.From = oq.sql
 	if unique := oq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

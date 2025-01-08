@@ -33,14 +33,14 @@ func (lc *LabelCreate) SetValue(s string) *LabelCreate {
 }
 
 // AddOperationIDs adds the "operation" edge to the Operation entity by IDs.
-func (lc *LabelCreate) AddOperationIDs(ids ...string) *LabelCreate {
+func (lc *LabelCreate) AddOperationIDs(ids ...int) *LabelCreate {
 	lc.mutation.AddOperationIDs(ids...)
 	return lc
 }
 
 // AddOperation adds the "operation" edges to the Operation entity.
 func (lc *LabelCreate) AddOperation(o ...*Operation) *LabelCreate {
-	ids := make([]string, len(o))
+	ids := make([]int, len(o))
 	for i := range o {
 		ids[i] = o[i].ID
 	}
@@ -129,7 +129,7 @@ func (lc *LabelCreate) createSpec() (*Label, *sqlgraph.CreateSpec) {
 			Columns: label.OperationPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(operation.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
