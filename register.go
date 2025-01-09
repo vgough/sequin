@@ -56,6 +56,27 @@ func GlobalID() RegisterOpt {
 	}
 }
 
+// UseCheckpoints enables checkpointing for the operation.
+func UseCheckpoints() RegisterOpt {
+	return enableFeatureFlag(registry.FeatureCheckpoint)
+}
+
+// AutoBackground enables automatic retry for the operation.
+// By default, the operation will only run in the foreground of the caller.
+// If AutoBackground is enabled, the operation will be retried in the background
+// even if the caller fails. The result of the operation will be returned to the
+// caller the next time the operation is called.
+func AutoBackground() RegisterOpt {
+	return enableFeatureFlag(registry.FeatureBackground)
+}
+
+func enableFeatureFlag(flag registry.FeatureFlag) RegisterOpt {
+	return func(ep *registry.Endpoint) error {
+		ep.EnableFeature(flag)
+		return nil
+	}
+}
+
 func contextDispatch(ep *registry.Endpoint) func([]reflect.Value) []reflect.Value {
 	return func(args []reflect.Value) []reflect.Value {
 		ctx := ep.GetContext(args)

@@ -56,7 +56,7 @@ func TestRuntimeError(t *testing.T) {
 
 var IsEven = Register(isEven)
 
-func isEven(_ context.Context, in int) (bool, error) {
+func isEven(ctx context.Context, in int) (bool, error) {
 	if in < 0 {
 		return false, errors.New("negative values not supported")
 	}

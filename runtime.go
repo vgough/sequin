@@ -24,3 +24,33 @@ func WithRuntime(ctx context.Context, rt Runtime) context.Context {
 func GetRuntime(ctx context.Context) Runtime {
 	return runtimeMD.Get(ctx)
 }
+
+type OpRuntimeOpt func(rt internal.OpRuntime) error
+
+func OpConfig(ctx context.Context, opts ...OpRuntimeOpt) error {
+	rt := internal.GetOpRuntime(ctx)
+	if rt == nil {
+		rt = internal.NoOpRuntime{}
+	}
+	for _, opt := range opts {
+		if err := opt(rt); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Persist[T any](name string, state T) OpRuntimeOpt {
+	return func(rt internal.OpRuntime) error {
+		return rt.RegisterState(name, state)
+	}
+}
+
+// Checkpoint stores the current state of any registered variables.
+func Checkpoint(ctx context.Context) error {
+	rt := internal.GetOpRuntime(ctx)
+	if rt == nil {
+		return nil
+	}
+	return rt.Checkpoint(ctx)
+}

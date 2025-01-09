@@ -94,6 +94,7 @@ func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Val
 func (s *Server) run(ctx context.Context, requestID string,
 	ep *registry.Endpoint, data [][]byte) ([][]byte, error) {
 
+	// use singleflight to avoid duplicate requests.
 	res := s.sf.DoChan(requestID, func() (interface{}, error) {
 		s.mu.Lock()
 		state, ok := s.cache[requestID]
@@ -109,6 +110,7 @@ func (s *Server) run(ctx context.Context, requestID string,
 		state = &requestState{requestID: requestID, results: results}
 		s.mu.Lock()
 		defer s.mu.Unlock()
+		// persist results.
 		s.cache[requestID] = state
 
 		return state, nil

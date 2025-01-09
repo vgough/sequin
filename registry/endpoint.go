@@ -12,6 +12,15 @@ var ErrorType = reflect.TypeFor[error]()
 
 var ErrEndpointNotFound = errors.New("endpoint not found")
 
+type FeatureFlag int
+
+const (
+	// FeatureCheckpoint enables checkpointing for the operation.
+	FeatureCheckpoint FeatureFlag = 1 << iota
+	// FeatureBackground enables automatic background execution for the operation.
+	FeatureBackground
+)
+
 // Endpoint stores information about a registered function.
 type Endpoint struct {
 	Name          string
@@ -20,8 +29,17 @@ type Endpoint struct {
 	InputTypes    []reflect.Type // Argument types of the function.
 	OutputTypes   []reflect.Type // Return types of the function.
 	MethodBinding reflect.Value  // Fixed method to bind to calls.
+	FeatureFlags  FeatureFlag    // Feature flags.
 
 	Metadata map[string]interface{} // Arbitrary metadata.
+}
+
+func (ep *Endpoint) HasFeature(flag FeatureFlag) bool {
+	return ep.FeatureFlags&flag != 0
+}
+
+func (ep *Endpoint) EnableFeature(flag FeatureFlag) {
+	ep.FeatureFlags |= flag
 }
 
 // NewEndpoint creates a new endpoint from a function.
