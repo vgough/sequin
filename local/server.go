@@ -153,9 +153,6 @@ func (s *Server) exec(name string, requestID string, args [][]byte) ([][]byte, e
 	if err != nil {
 		return nil, err
 	}
-	if ep.ContextIndex >= 0 {
-		in[ep.ContextIndex] = reflect.ValueOf(context.Background())
-	}
 
 	// TODO: chain to incoming context.
 	ctx, cancel := context.WithCancel(context.Background())
