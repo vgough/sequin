@@ -1,29 +1,18 @@
-package storage
+package local
 
 import (
 	"context"
 	"testing"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sequinv1 "github.com/vgough/sequin/gen/sequin/v1"
-	"github.com/vgough/sequin/storage/ent"
-	"github.com/vgough/sequin/storage/ent/enttest"
-	"github.com/vgough/sequin/storage/ent/migrate"
 )
 
 func TestObjectStore(t *testing.T) {
-	opts := []enttest.Option{
-		enttest.WithOptions(ent.Log(t.Log)),
-		enttest.WithMigrateOptions(migrate.WithGlobalUniqueID(true)),
-	}
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&_fk=1", opts...)
-	defer client.Close()
-
 	ctx := context.Background()
-	os := NewObjectStore(client)
+	os := NewMemStore()
 	created, err := os.AddOperation(ctx, &sequinv1.Operation{
 		RequestId: "123",
 		Detail: &anypb.Any{

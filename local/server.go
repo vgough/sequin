@@ -17,7 +17,6 @@ import (
 	sequinv1 "github.com/vgough/sequin/gen/sequin/v1"
 	"github.com/vgough/sequin/internal"
 	"github.com/vgough/sequin/registry"
-	"github.com/vgough/sequin/storage"
 )
 
 var encodingKey []byte = []byte("sequin")
@@ -26,14 +25,14 @@ var requestIDMD = internal.MDKey[string]{}
 type Server struct {
 	sf singleflight.Group
 
-	storage storage.Store
+	storage Store
 }
 
 var _ sequin.Runtime = &Server{}
 
 type ServerOptions func(*Server)
 
-func WithStorage(storage storage.Store) ServerOptions {
+func WithStorage(storage Store) ServerOptions {
 	return func(s *Server) {
 		s.storage = storage
 	}
@@ -45,7 +44,7 @@ func NewServer(opts ...ServerOptions) *Server {
 		opt(s)
 	}
 	if s.storage == nil {
-		s.storage = storage.NewTestObjectStore()
+		s.storage = NewMemStore()
 	}
 	return s
 }
@@ -111,7 +110,7 @@ func (s *Server) runInternal(ctx context.Context, requestID string,
 			return nil, err
 		}
 		if state.Done {
-			return nil, storage.ErrOperationAlreadyFinished
+			return nil, ErrOperationAlreadyFinished
 		}
 		return nil, fmt.Errorf("operation already exists: %w", err)
 	}
