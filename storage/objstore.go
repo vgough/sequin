@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"fmt"
 	"hash/fnv"
 	"log"
 
@@ -52,23 +53,53 @@ func NewObjectStore(db *ent.Client, opts ...ObjectStoreOption) *ObjStore {
 var _ Store = (*ObjStore)(nil)
 
 // AddOperation implements Store.
-func (o *ObjStore) AddOperation(ctx context.Context, req *sequinv1.Operation,
-	submitter string) error {
+func (o *ObjStore) AddOperation(ctx context.Context,
+	req *sequinv1.Operation) (bool, error) {
 
 	detail, err := proto.Marshal(req)
 	if err != nil {
-		return err
+		return false, fmt.Errorf("marshal failed: %w", err)
 	}
 
 	shard := o.shardFromRequestID(req.RequestId)
 
-	_, err = o.db.Operation.Create().
+	tx, err := o.db.BeginTx(ctx, nil)
+	if err != nil {
+		return false, fmt.Errorf("begin tx failed: %w", err)
+	}
+	defer tx.Rollback()
+
+	entop, err := tx.Operation.Query().
+		Select(operation.FieldDetail).
+		Where(operation.Shard(shard), operation.RequestID(req.RequestId)).
+		Only(ctx)
+
+	switch {
+	case err == nil:
+		detail := &sequinv1.Operation{}
+		err = proto.Unmarshal(entop.Detail, detail)
+		if err != nil {
+			return false, fmt.Errorf("unmarshal failed: %w", err)
+		}
+		return false, nil
+
+	case ent.IsNotFound(err):
+		// Operation doesn't exist, so we can add it.
+	default:
+		return false, fmt.Errorf("get failed: %w", err)
+	}
+
+	_, err = tx.Operation.Create().
 		SetRequestID(req.RequestId).
 		SetShard(shard).
 		SetDetail(detail).
-		SetSubmitter(submitter).
 		Save(ctx)
-	return err
+
+	if err != nil {
+		return false, fmt.Errorf("add failed: %w", err)
+	}
+
+	return true, tx.Commit()
 }
 
 // func (o *ObjStore) AddLabel(ctx context.Context, requestID string, name, value string) error {
@@ -104,13 +135,16 @@ func (o *ObjStore) GetOperation(ctx context.Context,
 		Where(operation.Shard(shard), operation.RequestID(requestID)).
 		Only(ctx)
 	if err != nil {
-		return nil, err
+		if ent.IsNotFound(err) {
+			return nil, ErrOperationNotFound
+		}
+		return nil, fmt.Errorf("get failed: %w", err)
 	}
 
 	detail := &sequinv1.Operation{}
 	err = proto.Unmarshal(entop.Detail, detail)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal failed: %w", err)
 	}
 
 	return detail, nil
@@ -127,12 +161,19 @@ func (o *ObjStore) GetState(ctx context.Context,
 		Where(operation.Shard(shard), operation.RequestID(requestID)).
 		Only(ctx)
 	if err != nil {
-		return nil, err
+		if ent.IsNotFound(err) {
+			return nil, ErrOperationNotFound
+		}
+		return nil, fmt.Errorf("get failed: %w", err)
 	}
 
 	state := &sequinv1.OperationState{}
 	err = proto.Unmarshal(entop.State, state)
-	return state, err
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal failed: %w", err)
+	}
+
+	return state, nil
 }
 
 // SetState implements Store.
@@ -143,12 +184,12 @@ func (o *ObjStore) SetState(ctx context.Context,
 
 	stateData, err := proto.Marshal(state)
 	if err != nil {
-		return err
+		return fmt.Errorf("marshal failed: %w", err)
 	}
 
 	tx, err := o.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("begin tx failed: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -158,16 +199,16 @@ func (o *ObjStore) SetState(ctx context.Context,
 		Where(operation.Shard(shard), operation.RequestID(requestID)).
 		Only(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("get failed: %w", err)
 	}
 	if entop.Result != nil {
-		return errors.New("operation already done")
+		return fmt.Errorf("operation already done")
 	}
 
 	if entop.State != nil {
 		var oldState sequinv1.OperationState
 		if err := proto.Unmarshal(entop.State, &oldState); err != nil {
-			return err
+			return fmt.Errorf("unmarshal failed: %w", err)
 		}
 		if oldState.UpdateId >= state.UpdateId {
 			return errors.New("update ID is not increasing")
@@ -178,7 +219,7 @@ func (o *ObjStore) SetState(ctx context.Context,
 		SetState(stateData).
 		Save(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("update failed: %w", err)
 	}
 
 	return tx.Commit()
@@ -189,12 +230,12 @@ func (o *ObjStore) SetResult(ctx context.Context,
 
 	resultData, err := proto.Marshal(result)
 	if err != nil {
-		return err
+		return fmt.Errorf("marshal failed: %w", err)
 	}
 
 	tx, err := o.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("begin tx failed: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -203,16 +244,23 @@ func (o *ObjStore) SetResult(ctx context.Context,
 		Where(operation.RequestID(requestID)).
 		Only(ctx)
 	if err != nil {
-		return err
+		if ent.IsNotFound(err) {
+			return ErrOperationNotFound
+		}
+		return fmt.Errorf("get failed: %w", err)
 	}
 	if entop.Result != nil {
-		return errors.New("operation already done")
+		return ErrOperationAlreadyFinished
 	}
 
 	_, err = entop.Update().
 		SetResult(resultData).
 		Save(ctx)
-	return err
+	if err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	return tx.Commit()
 }
 
 // GetResult implements Store.
@@ -224,7 +272,10 @@ func (o *ObjStore) GetResult(ctx context.Context,
 		Where(operation.RequestID(requestID)).
 		Only(ctx)
 	if err != nil {
-		return false, nil, err
+		if ent.IsNotFound(err) {
+			return false, nil, ErrOperationNotFound
+		}
+		return false, nil, fmt.Errorf("get failed: %w", err)
 	}
 
 	if entop.Result == nil {
@@ -232,5 +283,8 @@ func (o *ObjStore) GetResult(ctx context.Context,
 	}
 	result := &sequinv1.OperationResult{}
 	err = proto.Unmarshal(entop.Result, result)
-	return true, result, err
+	if err != nil {
+		return false, nil, fmt.Errorf("unmarshal failed: %w", err)
+	}
+	return true, result, nil
 }

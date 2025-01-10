@@ -101,12 +101,6 @@ func (oc *OperationCreate) SetResult(b []byte) *OperationCreate {
 	return oc
 }
 
-// SetSubmitter sets the "submitter" field.
-func (oc *OperationCreate) SetSubmitter(s string) *OperationCreate {
-	oc.mutation.SetSubmitter(s)
-	return oc
-}
-
 // SetStartedAt sets the "started_at" field.
 func (oc *OperationCreate) SetStartedAt(t time.Time) *OperationCreate {
 	oc.mutation.SetStartedAt(t)
@@ -216,9 +210,6 @@ func (oc *OperationCreate) check() error {
 	if _, ok := oc.mutation.Detail(); !ok {
 		return &ValidationError{Name: "detail", err: errors.New(`ent: missing required field "Operation.detail"`)}
 	}
-	if _, ok := oc.mutation.Submitter(); !ok {
-		return &ValidationError{Name: "submitter", err: errors.New(`ent: missing required field "Operation.submitter"`)}
-	}
 	return nil
 }
 
@@ -276,10 +267,6 @@ func (oc *OperationCreate) createSpec() (*Operation, *sqlgraph.CreateSpec) {
 	if value, ok := oc.mutation.Result(); ok {
 		_spec.SetField(operation.FieldResult, field.TypeBytes, value)
 		_node.Result = value
-	}
-	if value, ok := oc.mutation.Submitter(); ok {
-		_spec.SetField(operation.FieldSubmitter, field.TypeString, value)
-		_node.Submitter = value
 	}
 	if value, ok := oc.mutation.StartedAt(); ok {
 		_spec.SetField(operation.FieldStartedAt, field.TypeTime, value)

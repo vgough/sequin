@@ -24,15 +24,15 @@ func TestObjectStore(t *testing.T) {
 
 	ctx := context.Background()
 	os := NewObjectStore(client)
-	err := os.AddOperation(ctx, &sequinv1.Operation{
+	created, err := os.AddOperation(ctx, &sequinv1.Operation{
 		RequestId: "123",
 		Detail: &anypb.Any{
 			TypeUrl: "test",
 			Value:   []byte("test"),
 		},
-	}, "test")
+	})
 	require.NoError(t, err)
-
+	require.True(t, created)
 	err = os.SetState(ctx, "123", &sequinv1.OperationState{
 		UpdateId: 1,
 	})

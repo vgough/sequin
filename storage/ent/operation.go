@@ -33,8 +33,6 @@ type Operation struct {
 	State []byte `json:"state,omitempty"`
 	// Result holds the value of the "result" field.
 	Result []byte `json:"result,omitempty"`
-	// Submitter holds the value of the "submitter" field.
-	Submitter string `json:"submitter,omitempty"`
 	// StartedAt holds the value of the "started_at" field.
 	StartedAt time.Time `json:"started_at,omitempty"`
 	// FinishedAt holds the value of the "finished_at" field.
@@ -72,7 +70,7 @@ func (*Operation) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case operation.FieldID, operation.FieldShard:
 			values[i] = new(sql.NullInt64)
-		case operation.FieldRequestID, operation.FieldSubmitter:
+		case operation.FieldRequestID:
 			values[i] = new(sql.NullString)
 		case operation.FieldCreateTime, operation.FieldUpdateTime, operation.FieldNextCheckAt, operation.FieldStartedAt, operation.FieldFinishedAt:
 			values[i] = new(sql.NullTime)
@@ -144,12 +142,6 @@ func (o *Operation) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field result", values[i])
 			} else if value != nil {
 				o.Result = *value
-			}
-		case operation.FieldSubmitter:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field submitter", values[i])
-			} else if value.Valid {
-				o.Submitter = value.String
 			}
 		case operation.FieldStartedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -227,9 +219,6 @@ func (o *Operation) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("result=")
 	builder.WriteString(fmt.Sprintf("%v", o.Result))
-	builder.WriteString(", ")
-	builder.WriteString("submitter=")
-	builder.WriteString(o.Submitter)
 	builder.WriteString(", ")
 	builder.WriteString("started_at=")
 	builder.WriteString(o.StartedAt.Format(time.ANSIC))

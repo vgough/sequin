@@ -95,11 +95,6 @@ func Result(v []byte) predicate.Operation {
 	return predicate.Operation(sql.FieldEQ(FieldResult, v))
 }
 
-// Submitter applies equality check predicate on the "submitter" field. It's identical to SubmitterEQ.
-func Submitter(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldEQ(FieldSubmitter, v))
-}
-
 // StartedAt applies equality check predicate on the "started_at" field. It's identical to StartedAtEQ.
 func StartedAt(v time.Time) predicate.Operation {
 	return predicate.Operation(sql.FieldEQ(FieldStartedAt, v))
@@ -483,71 +478,6 @@ func ResultIsNil() predicate.Operation {
 // ResultNotNil applies the NotNil predicate on the "result" field.
 func ResultNotNil() predicate.Operation {
 	return predicate.Operation(sql.FieldNotNull(FieldResult))
-}
-
-// SubmitterEQ applies the EQ predicate on the "submitter" field.
-func SubmitterEQ(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldEQ(FieldSubmitter, v))
-}
-
-// SubmitterNEQ applies the NEQ predicate on the "submitter" field.
-func SubmitterNEQ(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldNEQ(FieldSubmitter, v))
-}
-
-// SubmitterIn applies the In predicate on the "submitter" field.
-func SubmitterIn(vs ...string) predicate.Operation {
-	return predicate.Operation(sql.FieldIn(FieldSubmitter, vs...))
-}
-
-// SubmitterNotIn applies the NotIn predicate on the "submitter" field.
-func SubmitterNotIn(vs ...string) predicate.Operation {
-	return predicate.Operation(sql.FieldNotIn(FieldSubmitter, vs...))
-}
-
-// SubmitterGT applies the GT predicate on the "submitter" field.
-func SubmitterGT(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldGT(FieldSubmitter, v))
-}
-
-// SubmitterGTE applies the GTE predicate on the "submitter" field.
-func SubmitterGTE(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldGTE(FieldSubmitter, v))
-}
-
-// SubmitterLT applies the LT predicate on the "submitter" field.
-func SubmitterLT(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldLT(FieldSubmitter, v))
-}
-
-// SubmitterLTE applies the LTE predicate on the "submitter" field.
-func SubmitterLTE(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldLTE(FieldSubmitter, v))
-}
-
-// SubmitterContains applies the Contains predicate on the "submitter" field.
-func SubmitterContains(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldContains(FieldSubmitter, v))
-}
-
-// SubmitterHasPrefix applies the HasPrefix predicate on the "submitter" field.
-func SubmitterHasPrefix(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldHasPrefix(FieldSubmitter, v))
-}
-
-// SubmitterHasSuffix applies the HasSuffix predicate on the "submitter" field.
-func SubmitterHasSuffix(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldHasSuffix(FieldSubmitter, v))
-}
-
-// SubmitterEqualFold applies the EqualFold predicate on the "submitter" field.
-func SubmitterEqualFold(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldEqualFold(FieldSubmitter, v))
-}
-
-// SubmitterContainsFold applies the ContainsFold predicate on the "submitter" field.
-func SubmitterContainsFold(v string) predicate.Operation {
-	return predicate.Operation(sql.FieldContainsFold(FieldSubmitter, v))
 }
 
 // StartedAtEQ applies the EQ predicate on the "started_at" field.

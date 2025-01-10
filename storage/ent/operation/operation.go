@@ -30,8 +30,6 @@ const (
 	FieldState = "state"
 	// FieldResult holds the string denoting the result field in the database.
 	FieldResult = "result"
-	// FieldSubmitter holds the string denoting the submitter field in the database.
-	FieldSubmitter = "submitter"
 	// FieldStartedAt holds the string denoting the started_at field in the database.
 	FieldStartedAt = "started_at"
 	// FieldFinishedAt holds the string denoting the finished_at field in the database.
@@ -58,7 +56,6 @@ var Columns = []string{
 	FieldNextCheckAt,
 	FieldState,
 	FieldResult,
-	FieldSubmitter,
 	FieldStartedAt,
 	FieldFinishedAt,
 }
@@ -121,11 +118,6 @@ func ByShard(opts ...sql.OrderTermOption) OrderOption {
 // ByNextCheckAt orders the results by the next_check_at field.
 func ByNextCheckAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldNextCheckAt, opts...).ToFunc()
-}
-
-// BySubmitter orders the results by the submitter field.
-func BySubmitter(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSubmitter, opts...).ToFunc()
 }
 
 // ByStartedAt orders the results by the started_at field.

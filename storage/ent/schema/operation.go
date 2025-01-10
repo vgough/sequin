@@ -23,7 +23,6 @@ func (Operation) Fields() []ent.Field {
 		field.Time("next_check_at").Optional(),
 		field.Bytes("state").Optional(),
 		field.Bytes("result").Optional(),
-		field.String("submitter"),
 		field.Time("started_at").Optional(),
 		field.Time("finished_at").Optional(),
 	}

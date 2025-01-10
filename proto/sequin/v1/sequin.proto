@@ -62,6 +62,7 @@ message OperationResult {
 message OperationState {
     int64 update_id = 1;
     map<string, google.protobuf.Any> state = 2;
+    bool done = 3;
 }
 
 message StartResponse {
@@ -84,7 +85,7 @@ message GetResponse {
 
 message FuncOperation {
     string name = 1 [(buf.validate.field).string.min_len = 1];
-    repeated google.protobuf.Any args = 2;
+    repeated bytes args = 2;
 }
 
 message ExecResponse {

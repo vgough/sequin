@@ -517,7 +517,6 @@ type OperationMutation struct {
 	next_check_at *time.Time
 	state         *[]byte
 	result        *[]byte
-	submitter     *string
 	started_at    *time.Time
 	finished_at   *time.Time
 	clearedFields map[string]struct{}
@@ -974,42 +973,6 @@ func (m *OperationMutation) ResetResult() {
 	delete(m.clearedFields, operation.FieldResult)
 }
 
-// SetSubmitter sets the "submitter" field.
-func (m *OperationMutation) SetSubmitter(s string) {
-	m.submitter = &s
-}
-
-// Submitter returns the value of the "submitter" field in the mutation.
-func (m *OperationMutation) Submitter() (r string, exists bool) {
-	v := m.submitter
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSubmitter returns the old "submitter" field's value of the Operation entity.
-// If the Operation object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *OperationMutation) OldSubmitter(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSubmitter is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSubmitter requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSubmitter: %w", err)
-	}
-	return oldValue.Submitter, nil
-}
-
-// ResetSubmitter resets all changes to the "submitter" field.
-func (m *OperationMutation) ResetSubmitter() {
-	m.submitter = nil
-}
-
 // SetStartedAt sets the "started_at" field.
 func (m *OperationMutation) SetStartedAt(t time.Time) {
 	m.started_at = &t
@@ -1196,7 +1159,7 @@ func (m *OperationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OperationMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 10)
 	if m.create_time != nil {
 		fields = append(fields, operation.FieldCreateTime)
 	}
@@ -1220,9 +1183,6 @@ func (m *OperationMutation) Fields() []string {
 	}
 	if m.result != nil {
 		fields = append(fields, operation.FieldResult)
-	}
-	if m.submitter != nil {
-		fields = append(fields, operation.FieldSubmitter)
 	}
 	if m.started_at != nil {
 		fields = append(fields, operation.FieldStartedAt)
@@ -1254,8 +1214,6 @@ func (m *OperationMutation) Field(name string) (ent.Value, bool) {
 		return m.State()
 	case operation.FieldResult:
 		return m.Result()
-	case operation.FieldSubmitter:
-		return m.Submitter()
 	case operation.FieldStartedAt:
 		return m.StartedAt()
 	case operation.FieldFinishedAt:
@@ -1285,8 +1243,6 @@ func (m *OperationMutation) OldField(ctx context.Context, name string) (ent.Valu
 		return m.OldState(ctx)
 	case operation.FieldResult:
 		return m.OldResult(ctx)
-	case operation.FieldSubmitter:
-		return m.OldSubmitter(ctx)
 	case operation.FieldStartedAt:
 		return m.OldStartedAt(ctx)
 	case operation.FieldFinishedAt:
@@ -1355,13 +1311,6 @@ func (m *OperationMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetResult(v)
-		return nil
-	case operation.FieldSubmitter:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSubmitter(v)
 		return nil
 	case operation.FieldStartedAt:
 		v, ok := value.(time.Time)
@@ -1497,9 +1446,6 @@ func (m *OperationMutation) ResetField(name string) error {
 		return nil
 	case operation.FieldResult:
 		m.ResetResult()
-		return nil
-	case operation.FieldSubmitter:
-		m.ResetSubmitter()
 		return nil
 	case operation.FieldStartedAt:
 		m.ResetStartedAt()

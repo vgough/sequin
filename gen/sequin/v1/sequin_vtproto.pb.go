@@ -111,6 +111,7 @@ func (m *OperationState) CloneVT() *OperationState {
 	}
 	r := new(OperationState)
 	r.UpdateId = m.UpdateId
+	r.Done = m.Done
 	if rhs := m.State; rhs != nil {
 		tmpContainer := make(map[string]*anypb.Any, len(rhs))
 		for k, v := range rhs {
@@ -188,9 +189,11 @@ func (m *FuncOperation) CloneVT() *FuncOperation {
 	r := new(FuncOperation)
 	r.Name = m.Name
 	if rhs := m.Args; rhs != nil {
-		tmpContainer := make([]*anypb.Any, len(rhs))
+		tmpContainer := make([][]byte, len(rhs))
 		for k, v := range rhs {
-			tmpContainer[k] = (*anypb.Any)((*anypb1.Any)(v).CloneVT())
+			tmpBytes := make([]byte, len(v))
+			copy(tmpBytes, v)
+			tmpContainer[k] = tmpBytes
 		}
 		r.Args = tmpContainer
 	}
@@ -367,6 +370,9 @@ func (this *OperationState) EqualVT(that *OperationState) bool {
 			}
 		}
 	}
+	if this.Done != that.Done {
+		return false
+	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
@@ -451,16 +457,8 @@ func (this *FuncOperation) EqualVT(that *FuncOperation) bool {
 	}
 	for i, vx := range this.Args {
 		vy := that.Args[i]
-		if p, q := vx, vy; p != q {
-			if p == nil {
-				p = &anypb.Any{}
-			}
-			if q == nil {
-				q = &anypb.Any{}
-			}
-			if !(*anypb1.Any)(p).EqualVT((*anypb1.Any)(q)) {
-				return false
-			}
+		if string(vx) != string(vy) {
+			return false
 		}
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
@@ -936,6 +934,16 @@ func (m *OperationState) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.Done {
+		i--
+		if m.Done {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
 	if len(m.State) > 0 {
 		for k := range m.State {
 			v := m.State[k]
@@ -1129,12 +1137,9 @@ func (m *FuncOperation) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	}
 	if len(m.Args) > 0 {
 		for iNdEx := len(m.Args) - 1; iNdEx >= 0; iNdEx-- {
-			size, err := (*anypb1.Any)(m.Args[iNdEx]).MarshalToSizedBufferVT(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+			i -= len(m.Args[iNdEx])
+			copy(dAtA[i:], m.Args[iNdEx])
+			i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Args[iNdEx])))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -1478,6 +1483,16 @@ func (m *OperationState) MarshalToSizedBufferVTStrict(dAtA []byte) (int, error) 
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.Done {
+		i--
+		if m.Done {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
 	if len(m.State) > 0 {
 		for k := range m.State {
 			v := m.State[k]
@@ -1671,12 +1686,9 @@ func (m *FuncOperation) MarshalToSizedBufferVTStrict(dAtA []byte) (int, error) {
 	}
 	if len(m.Args) > 0 {
 		for iNdEx := len(m.Args) - 1; iNdEx >= 0; iNdEx-- {
-			size, err := (*anypb1.Any)(m.Args[iNdEx]).MarshalToSizedBufferVTStrict(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+			i -= len(m.Args[iNdEx])
+			copy(dAtA[i:], m.Args[iNdEx])
+			i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Args[iNdEx])))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -1891,6 +1903,9 @@ func (m *OperationState) SizeVT() (n int) {
 			n += mapEntrySize + 1 + protohelpers.SizeOfVarint(uint64(mapEntrySize))
 		}
 	}
+	if m.Done {
+		n += 2
+	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -1951,8 +1966,8 @@ func (m *FuncOperation) SizeVT() (n int) {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if len(m.Args) > 0 {
-		for _, e := range m.Args {
-			l = (*anypb1.Any)(e).SizeVT()
+		for _, b := range m.Args {
+			l = len(b)
 			n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 		}
 	}
@@ -2574,6 +2589,26 @@ func (m *OperationState) UnmarshalVT(dAtA []byte) error {
 			}
 			m.State[mapkey] = mapvalue
 			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Done", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Done = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -2937,7 +2972,7 @@ func (m *FuncOperation) UnmarshalVT(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Args", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -2947,25 +2982,23 @@ func (m *FuncOperation) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return protohelpers.ErrInvalidLength
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return protohelpers.ErrInvalidLength
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Args = append(m.Args, &anypb.Any{})
-			if err := (*anypb1.Any)(m.Args[len(m.Args)-1]).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Args = append(m.Args, make([]byte, postIndex-iNdEx))
+			copy(m.Args[len(m.Args)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3849,6 +3882,26 @@ func (m *OperationState) UnmarshalVTUnsafe(dAtA []byte) error {
 			}
 			m.State[mapkey] = mapvalue
 			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Done", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Done = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -4220,7 +4273,7 @@ func (m *FuncOperation) UnmarshalVTUnsafe(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Args", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -4230,25 +4283,22 @@ func (m *FuncOperation) UnmarshalVTUnsafe(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return protohelpers.ErrInvalidLength
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return protohelpers.ErrInvalidLength
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Args = append(m.Args, &anypb.Any{})
-			if err := (*anypb1.Any)(m.Args[len(m.Args)-1]).UnmarshalVTUnsafe(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Args = append(m.Args, dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

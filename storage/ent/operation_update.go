@@ -120,20 +120,6 @@ func (ou *OperationUpdate) ClearResult() *OperationUpdate {
 	return ou
 }
 
-// SetSubmitter sets the "submitter" field.
-func (ou *OperationUpdate) SetSubmitter(s string) *OperationUpdate {
-	ou.mutation.SetSubmitter(s)
-	return ou
-}
-
-// SetNillableSubmitter sets the "submitter" field if the given value is not nil.
-func (ou *OperationUpdate) SetNillableSubmitter(s *string) *OperationUpdate {
-	if s != nil {
-		ou.SetSubmitter(*s)
-	}
-	return ou
-}
-
 // SetStartedAt sets the "started_at" field.
 func (ou *OperationUpdate) SetStartedAt(t time.Time) *OperationUpdate {
 	ou.mutation.SetStartedAt(t)
@@ -292,9 +278,6 @@ func (ou *OperationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if ou.mutation.ResultCleared() {
 		_spec.ClearField(operation.FieldResult, field.TypeBytes)
-	}
-	if value, ok := ou.mutation.Submitter(); ok {
-		_spec.SetField(operation.FieldSubmitter, field.TypeString, value)
 	}
 	if value, ok := ou.mutation.StartedAt(); ok {
 		_spec.SetField(operation.FieldStartedAt, field.TypeTime, value)
@@ -461,20 +444,6 @@ func (ouo *OperationUpdateOne) SetResult(b []byte) *OperationUpdateOne {
 // ClearResult clears the value of the "result" field.
 func (ouo *OperationUpdateOne) ClearResult() *OperationUpdateOne {
 	ouo.mutation.ClearResult()
-	return ouo
-}
-
-// SetSubmitter sets the "submitter" field.
-func (ouo *OperationUpdateOne) SetSubmitter(s string) *OperationUpdateOne {
-	ouo.mutation.SetSubmitter(s)
-	return ouo
-}
-
-// SetNillableSubmitter sets the "submitter" field if the given value is not nil.
-func (ouo *OperationUpdateOne) SetNillableSubmitter(s *string) *OperationUpdateOne {
-	if s != nil {
-		ouo.SetSubmitter(*s)
-	}
 	return ouo
 }
 
@@ -666,9 +635,6 @@ func (ouo *OperationUpdateOne) sqlSave(ctx context.Context) (_node *Operation, e
 	}
 	if ouo.mutation.ResultCleared() {
 		_spec.ClearField(operation.FieldResult, field.TypeBytes)
-	}
-	if value, ok := ouo.mutation.Submitter(); ok {
-		_spec.SetField(operation.FieldSubmitter, field.TypeString, value)
 	}
 	if value, ok := ouo.mutation.StartedAt(); ok {
 		_spec.SetField(operation.FieldStartedAt, field.TypeTime, value)

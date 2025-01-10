@@ -6,13 +6,15 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"reflect"
-	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/sync/singleflight"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/vgough/sequin"
+	sequinv1 "github.com/vgough/sequin/gen/sequin/v1"
 	"github.com/vgough/sequin/internal"
 	"github.com/vgough/sequin/registry"
 	"github.com/vgough/sequin/storage"
@@ -22,18 +24,9 @@ var encodingKey []byte = []byte("sequin")
 var requestIDMD = internal.MDKey[string]{}
 
 type Server struct {
-	sf      singleflight.Group
+	sf singleflight.Group
+
 	storage storage.Store
-
-	mu sync.Mutex
-
-	// maps from request id to current or recent requests.
-	cache map[string]*requestState
-}
-
-type requestState struct {
-	requestID string
-	results   [][]byte
 }
 
 var _ sequin.Runtime = &Server{}
@@ -47,9 +40,7 @@ func WithStorage(storage storage.Store) ServerOptions {
 }
 
 func NewServer(opts ...ServerOptions) *Server {
-	s := &Server{
-		cache: make(map[string]*requestState),
-	}
+	s := &Server{}
 	for _, opt := range opts {
 		opt(s)
 	}
@@ -91,29 +82,54 @@ func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Val
 	return out
 }
 
+func (s *Server) runInternal(ctx context.Context, requestID string,
+	ep *registry.Endpoint, data [][]byte) ([][]byte, error) {
+
+	funcoOp := sequinv1.FuncOperation{
+		Name: ep.Name,
+		Args: data,
+	}
+	any, err := anypb.New(&funcoOp)
+	if err != nil {
+		return nil, err
+	}
+
+	op := &sequinv1.Operation{
+		RequestId: requestID,
+		Detail:    any,
+	}
+
+	created, err := s.storage.AddOperation(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	if !created {
+		// get existing state.
+		state, err := s.storage.GetState(ctx, requestID)
+		if err != nil {
+			return nil, err
+		}
+		if state.Done {
+			return nil, storage.ErrOperationAlreadyFinished
+		}
+		return nil, fmt.Errorf("operation already exists: %w", err)
+	}
+
+	results, err := s.exec(ep.Name, requestID, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
 func (s *Server) run(ctx context.Context, requestID string,
 	ep *registry.Endpoint, data [][]byte) ([][]byte, error) {
 
 	// use singleflight to avoid duplicate requests.
 	res := s.sf.DoChan(requestID, func() (interface{}, error) {
-		s.mu.Lock()
-		state, ok := s.cache[requestID]
-		s.mu.Unlock()
-		if ok {
-			return state, nil
-		}
-
-		results, err := s.exec(ep.Name, requestID, data)
-		if err != nil {
-			return nil, err
-		}
-		state = &requestState{requestID: requestID, results: results}
-		s.mu.Lock()
-		defer s.mu.Unlock()
-		// persist results.
-		s.cache[requestID] = state
-
-		return state, nil
+		return s.runInternal(ctx, requestID, ep, data)
 	})
 
 	select {
@@ -123,8 +139,8 @@ func (s *Server) run(ctx context.Context, requestID string,
 		if res.Err != nil {
 			return nil, res.Err
 		}
-		state := res.Val.(*requestState)
-		return state.results, nil
+		results := res.Val.([][]byte)
+		return results, nil
 	}
 }
 

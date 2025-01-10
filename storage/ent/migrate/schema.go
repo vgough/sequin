@@ -38,7 +38,6 @@ var (
 		{Name: "next_check_at", Type: field.TypeTime, Nullable: true},
 		{Name: "state", Type: field.TypeBytes, Nullable: true},
 		{Name: "result", Type: field.TypeBytes, Nullable: true},
-		{Name: "submitter", Type: field.TypeString},
 		{Name: "started_at", Type: field.TypeTime, Nullable: true},
 		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
 	}
