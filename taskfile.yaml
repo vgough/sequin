@@ -24,6 +24,10 @@ tasks:
     cmds:
       - revive .
 
+  format:
+    cmds:
+      - goimports -w -local=github.com/vgough .
+
   # build:
   #   cmds:
   #     - go build -v -i main.go

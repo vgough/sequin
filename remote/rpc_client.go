@@ -3,16 +3,16 @@ package remote
 import (
 	"reflect"
 
-	"github.com/vgough/sequin"
-	sequinv1 "github.com/vgough/sequin/gen/sequin/v1"
-	"github.com/vgough/sequin/gen/sequin/v1/sequinv1connect"
-	"github.com/vgough/sequin/registry"
+	"cloud.google.com/go/longrunning/autogen/longrunningpb"
+	"connectrpc.com/connect"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"cloud.google.com/go/longrunning/autogen/longrunningpb"
-	"connectrpc.com/connect"
+	"github.com/vgough/sequin"
+	sequinv1 "github.com/vgough/sequin/gen/sequin/v1"
+	"github.com/vgough/sequin/gen/sequin/v1/sequinv1connect"
+	"github.com/vgough/sequin/registry"
 )
 
 type Client struct {
