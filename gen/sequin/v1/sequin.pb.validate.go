@@ -581,51 +581,7 @@ func (m *OperationState) validate(all bool) error {
 
 	// no validation rules for UpdateId
 
-	{
-		sorted_keys := make([]string, len(m.GetState()))
-		i := 0
-		for key := range m.GetState() {
-			sorted_keys[i] = key
-			i++
-		}
-		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
-		for _, key := range sorted_keys {
-			val := m.GetState()[key]
-			_ = val
-
-			// no validation rules for State[key]
-
-			if all {
-				switch v := interface{}(val).(type) {
-				case interface{ ValidateAll() error }:
-					if err := v.ValidateAll(); err != nil {
-						errors = append(errors, OperationStateValidationError{
-							field:  fmt.Sprintf("State[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				case interface{ Validate() error }:
-					if err := v.Validate(); err != nil {
-						errors = append(errors, OperationStateValidationError{
-							field:  fmt.Sprintf("State[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				}
-			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-				if err := v.Validate(); err != nil {
-					return OperationStateValidationError{
-						field:  fmt.Sprintf("State[%v]", key),
-						reason: "embedded message failed validation",
-						cause:  err,
-					}
-				}
-			}
-
-		}
-	}
+	// no validation rules for Checkpoint
 
 	// no validation rules for Done
 
@@ -838,7 +794,7 @@ func (m *GetRequest) validate(all bool) error {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, GetRequestValidationError{
-					field:  "State",
+					field:  "Checkpoint",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -846,7 +802,7 @@ func (m *GetRequest) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, GetRequestValidationError{
-					field:  "State",
+					field:  "Checkpoint",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -855,7 +811,7 @@ func (m *GetRequest) validate(all bool) error {
 	} else if v, ok := interface{}(m.GetState()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return GetRequestValidationError{
-				field:  "State",
+				field:  "Checkpoint",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

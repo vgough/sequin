@@ -103,21 +103,32 @@ func (s *Server) runInternal(ctx context.Context, requestID string,
 		return nil, err
 	}
 
+	var state *OpState
 	if !created {
 		// get existing state.
-		state, err := s.storage.GetState(ctx, requestID)
+		state, err = s.storage.GetState(ctx, requestID)
 		if err != nil {
 			return nil, err
 		}
-		if state.Done {
+		if len(state.Results) > 0 {
 			return nil, ErrOperationAlreadyFinished
 		}
-		return nil, fmt.Errorf("operation already exists: %w", err)
+	}
+	if state == nil {
+		state = &OpState{}
 	}
 
-	results, err := s.exec(ep.Name, requestID, data)
+	success, results, err := s.exec(ep.Name, requestID, data, state)
 	if err != nil {
 		return nil, err
+	}
+
+	if success {
+		state.Results = results
+		err = s.storage.SetState(ctx, requestID, state)
+		if err != nil {
+			return results, fmt.Errorf("failed to set terminal state: %w", err)
+		}
 	}
 
 	return results, nil
@@ -143,27 +154,37 @@ func (s *Server) run(ctx context.Context, requestID string,
 	}
 }
 
-func (s *Server) exec(name string, requestID string, args [][]byte) ([][]byte, error) {
+func (s *Server) exec(name string, requestID string, args [][]byte,
+	state *OpState) (bool, [][]byte, error) {
+
 	ep := registry.GetEndpoint(name)
 	if ep == nil {
-		return nil, errors.New("unknown function: " + name)
+		return false, nil, errors.New("unknown function: " + name)
 	}
 
 	in, err := s.decodeValues(args, ep.InputTypes)
 	if err != nil {
-		return nil, err
+		return false, nil, err
 	}
 
 	// TODO: chain to incoming context.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	rt := NewRuntime(s.storage, requestID, state)
+	ctx = internal.WithOpRuntime(ctx, rt)
+
 	ctx = sequin.WithRuntime(ctx, s)
 	ctx = requestIDMD.Set(ctx, requestID)
 	ep.SetContext(ctx, in)
 
 	out := ep.Exec(in)
-	return s.encodeValues(out)
+	data, err := s.encodeValues(out)
+	if err != nil {
+		return false, nil, err
+	}
+	success := ep.GetError(out) == nil
+	return success, data, nil
 }
 
 func computeUniqueID(parentID string, data [][]byte) string {

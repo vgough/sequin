@@ -112,12 +112,14 @@ func (m *OperationState) CloneVT() *OperationState {
 	r := new(OperationState)
 	r.UpdateId = m.UpdateId
 	r.Done = m.Done
-	if rhs := m.State; rhs != nil {
-		tmpContainer := make(map[string]*anypb.Any, len(rhs))
+	if rhs := m.Checkpoint; rhs != nil {
+		tmpContainer := make(map[string][]byte, len(rhs))
 		for k, v := range rhs {
-			tmpContainer[k] = (*anypb.Any)((*anypb1.Any)(v).CloneVT())
+			tmpBytes := make([]byte, len(v))
+			copy(tmpBytes, v)
+			tmpContainer[k] = tmpBytes
 		}
-		r.State = tmpContainer
+		r.Checkpoint = tmpContainer
 	}
 	if len(m.unknownFields) > 0 {
 		r.unknownFields = make([]byte, len(m.unknownFields))
@@ -153,7 +155,7 @@ func (m *GetRequest) CloneVT() *GetRequest {
 	r := new(GetRequest)
 	r.RequestId = m.RequestId
 	r.LastUpdateId = m.LastUpdateId
-	r.State = m.State.CloneVT()
+	r.Checkpoint = m.Checkpoint.CloneVT()
 	if len(m.unknownFields) > 0 {
 		r.unknownFields = make([]byte, len(m.unknownFields))
 		copy(r.unknownFields, m.unknownFields)
@@ -350,24 +352,16 @@ func (this *OperationState) EqualVT(that *OperationState) bool {
 	if this.UpdateId != that.UpdateId {
 		return false
 	}
-	if len(this.State) != len(that.State) {
+	if len(this.Checkpoint) != len(that.Checkpoint) {
 		return false
 	}
-	for i, vx := range this.State {
-		vy, ok := that.State[i]
+	for i, vx := range this.Checkpoint {
+		vy, ok := that.Checkpoint[i]
 		if !ok {
 			return false
 		}
-		if p, q := vx, vy; p != q {
-			if p == nil {
-				p = &anypb.Any{}
-			}
-			if q == nil {
-				q = &anypb.Any{}
-			}
-			if !(*anypb1.Any)(p).EqualVT((*anypb1.Any)(q)) {
-				return false
-			}
+		if string(vx) != string(vy) {
+			return false
 		}
 	}
 	if this.Done != that.Done {
@@ -411,7 +405,7 @@ func (this *GetRequest) EqualVT(that *GetRequest) bool {
 	if this.LastUpdateId != that.LastUpdateId {
 		return false
 	}
-	if !this.State.EqualVT(that.State) {
+	if !this.Checkpoint.EqualVT(that.Checkpoint) {
 		return false
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
@@ -944,16 +938,13 @@ func (m *OperationState) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x18
 	}
-	if len(m.State) > 0 {
-		for k := range m.State {
-			v := m.State[k]
+	if len(m.Checkpoint) > 0 {
+		for k := range m.Checkpoint {
+			v := m.Checkpoint[k]
 			baseI := i
-			size, err := (*anypb1.Any)(v).MarshalToSizedBufferVT(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = protohelpers.EncodeVarint(dAtA, i, uint64(len(v)))
 			i--
 			dAtA[i] = 0x12
 			i -= len(k)
@@ -1037,8 +1028,8 @@ func (m *GetRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.State != nil {
-		size, err := m.State.MarshalToSizedBufferVT(dAtA[:i])
+	if m.Checkpoint != nil {
+		size, err := m.Checkpoint.MarshalToSizedBufferVT(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -1493,16 +1484,13 @@ func (m *OperationState) MarshalToSizedBufferVTStrict(dAtA []byte) (int, error) 
 		i--
 		dAtA[i] = 0x18
 	}
-	if len(m.State) > 0 {
-		for k := range m.State {
-			v := m.State[k]
+	if len(m.Checkpoint) > 0 {
+		for k := range m.Checkpoint {
+			v := m.Checkpoint[k]
 			baseI := i
-			size, err := (*anypb1.Any)(v).MarshalToSizedBufferVTStrict(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = protohelpers.EncodeVarint(dAtA, i, uint64(len(v)))
 			i--
 			dAtA[i] = 0x12
 			i -= len(k)
@@ -1586,8 +1574,8 @@ func (m *GetRequest) MarshalToSizedBufferVTStrict(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.State != nil {
-		size, err := m.State.MarshalToSizedBufferVTStrict(dAtA[:i])
+	if m.Checkpoint != nil {
+		size, err := m.Checkpoint.MarshalToSizedBufferVTStrict(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -1890,15 +1878,11 @@ func (m *OperationState) SizeVT() (n int) {
 	if m.UpdateId != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.UpdateId))
 	}
-	if len(m.State) > 0 {
-		for k, v := range m.State {
+	if len(m.Checkpoint) > 0 {
+		for k, v := range m.Checkpoint {
 			_ = k
 			_ = v
-			l = 0
-			if v != nil {
-				l = (*anypb1.Any)(v).SizeVT()
-			}
-			l += 1 + protohelpers.SizeOfVarint(uint64(l))
+			l = 1 + len(v) + protohelpers.SizeOfVarint(uint64(len(v)))
 			mapEntrySize := 1 + len(k) + protohelpers.SizeOfVarint(uint64(len(k))) + l
 			n += mapEntrySize + 1 + protohelpers.SizeOfVarint(uint64(mapEntrySize))
 		}
@@ -1933,8 +1917,8 @@ func (m *GetRequest) SizeVT() (n int) {
 	if m.LastUpdateId != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.LastUpdateId))
 	}
-	if m.State != nil {
-		l = m.State.SizeVT()
+	if m.Checkpoint != nil {
+		l = m.Checkpoint.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	n += len(m.unknownFields)
@@ -2462,7 +2446,7 @@ func (m *OperationState) UnmarshalVT(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Checkpoint", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2489,11 +2473,11 @@ func (m *OperationState) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.State == nil {
-				m.State = make(map[string]*anypb.Any)
+			if m.Checkpoint == nil {
+				m.Checkpoint = make(map[string][]byte)
 			}
 			var mapkey string
-			var mapvalue *anypb.Any
+			var mapvalue []byte
 			for iNdEx < postIndex {
 				entryPreIndex := iNdEx
 				var wire uint64
@@ -2542,7 +2526,7 @@ func (m *OperationState) UnmarshalVT(dAtA []byte) error {
 					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
 					iNdEx = postStringIndexmapkey
 				} else if fieldNum == 2 {
-					var mapmsglen int
+					var mapbyteLen uint64
 					for shift := uint(0); ; shift += 7 {
 						if shift >= 64 {
 							return protohelpers.ErrIntOverflow
@@ -2552,26 +2536,25 @@ func (m *OperationState) UnmarshalVT(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= int(b&0x7F) << shift
+						mapbyteLen |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
 					}
-					if mapmsglen < 0 {
+					intMapbyteLen := int(mapbyteLen)
+					if intMapbyteLen < 0 {
 						return protohelpers.ErrInvalidLength
 					}
-					postmsgIndex := iNdEx + mapmsglen
-					if postmsgIndex < 0 {
+					postbytesIndex := iNdEx + intMapbyteLen
+					if postbytesIndex < 0 {
 						return protohelpers.ErrInvalidLength
 					}
-					if postmsgIndex > l {
+					if postbytesIndex > l {
 						return io.ErrUnexpectedEOF
 					}
-					mapvalue = &anypb.Any{}
-					if err := (*anypb1.Any)(mapvalue).UnmarshalVT(dAtA[iNdEx:postmsgIndex]); err != nil {
-						return err
-					}
-					iNdEx = postmsgIndex
+					mapvalue = make([]byte, mapbyteLen)
+					copy(mapvalue, dAtA[iNdEx:postbytesIndex])
+					iNdEx = postbytesIndex
 				} else {
 					iNdEx = entryPreIndex
 					skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -2587,7 +2570,7 @@ func (m *OperationState) UnmarshalVT(dAtA []byte) error {
 					iNdEx += skippy
 				}
 			}
-			m.State[mapkey] = mapvalue
+			m.Checkpoint[mapkey] = mapvalue
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
@@ -2764,7 +2747,7 @@ func (m *GetRequest) UnmarshalVT(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Checkpoint", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2791,10 +2774,10 @@ func (m *GetRequest) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.State == nil {
-				m.State = &OperationState{}
+			if m.Checkpoint == nil {
+				m.Checkpoint = &OperationState{}
 			}
-			if err := m.State.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Checkpoint.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3751,7 +3734,7 @@ func (m *OperationState) UnmarshalVTUnsafe(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Checkpoint", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3778,11 +3761,11 @@ func (m *OperationState) UnmarshalVTUnsafe(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.State == nil {
-				m.State = make(map[string]*anypb.Any)
+			if m.Checkpoint == nil {
+				m.Checkpoint = make(map[string][]byte)
 			}
 			var mapkey string
-			var mapvalue *anypb.Any
+			var mapvalue []byte
 			for iNdEx < postIndex {
 				entryPreIndex := iNdEx
 				var wire uint64
@@ -3835,7 +3818,7 @@ func (m *OperationState) UnmarshalVTUnsafe(dAtA []byte) error {
 					}
 					iNdEx = postStringIndexmapkey
 				} else if fieldNum == 2 {
-					var mapmsglen int
+					var mapbyteLen uint64
 					for shift := uint(0); ; shift += 7 {
 						if shift >= 64 {
 							return protohelpers.ErrIntOverflow
@@ -3845,26 +3828,24 @@ func (m *OperationState) UnmarshalVTUnsafe(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= int(b&0x7F) << shift
+						mapbyteLen |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
 					}
-					if mapmsglen < 0 {
+					intMapbyteLen := int(mapbyteLen)
+					if intMapbyteLen < 0 {
 						return protohelpers.ErrInvalidLength
 					}
-					postmsgIndex := iNdEx + mapmsglen
-					if postmsgIndex < 0 {
+					postbytesIndex := iNdEx + intMapbyteLen
+					if postbytesIndex < 0 {
 						return protohelpers.ErrInvalidLength
 					}
-					if postmsgIndex > l {
+					if postbytesIndex > l {
 						return io.ErrUnexpectedEOF
 					}
-					mapvalue = &anypb.Any{}
-					if err := (*anypb1.Any)(mapvalue).UnmarshalVTUnsafe(dAtA[iNdEx:postmsgIndex]); err != nil {
-						return err
-					}
-					iNdEx = postmsgIndex
+					mapvalue = dAtA[iNdEx:postbytesIndex]
+					iNdEx = postbytesIndex
 				} else {
 					iNdEx = entryPreIndex
 					skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -3880,7 +3861,7 @@ func (m *OperationState) UnmarshalVTUnsafe(dAtA []byte) error {
 					iNdEx += skippy
 				}
 			}
-			m.State[mapkey] = mapvalue
+			m.Checkpoint[mapkey] = mapvalue
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
@@ -4061,7 +4042,7 @@ func (m *GetRequest) UnmarshalVTUnsafe(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Checkpoint", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4088,10 +4069,10 @@ func (m *GetRequest) UnmarshalVTUnsafe(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.State == nil {
-				m.State = &OperationState{}
+			if m.Checkpoint == nil {
+				m.Checkpoint = &OperationState{}
 			}
-			if err := m.State.UnmarshalVTUnsafe(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Checkpoint.UnmarshalVTUnsafe(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -27,7 +27,7 @@ func GetRuntime(ctx context.Context) Runtime {
 
 type OpRuntimeOpt func(rt internal.OpRuntime) error
 
-func OpConfig(ctx context.Context, opts ...OpRuntimeOpt) error {
+func OpInit(ctx context.Context, opts ...OpRuntimeOpt) error {
 	rt := internal.GetOpRuntime(ctx)
 	if rt == nil {
 		rt = internal.NoOpRuntime{}
@@ -37,12 +37,13 @@ func OpConfig(ctx context.Context, opts ...OpRuntimeOpt) error {
 			return err
 		}
 	}
-	return nil
+	return rt.Restore(ctx)
 }
 
 func Persist[T any](name string, state T) OpRuntimeOpt {
 	return func(rt internal.OpRuntime) error {
-		return rt.RegisterState(name, state)
+		rt.RegisterState(name, state)
+		return nil
 	}
 }
 

@@ -22,12 +22,16 @@ func TestObjectStore(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.True(t, created)
-	err = os.SetState(ctx, "123", &sequinv1.OperationState{
-		UpdateId: 1,
+	err = os.SetState(ctx, "123", &OpState{
+		Checkpoint: map[string][]byte{
+			"test": []byte("test"),
+		},
 	})
 	require.NoError(t, err)
 
-	state, err := os.GetState(ctx, "123")
+	cp, err := os.GetState(ctx, "123")
 	require.NoError(t, err)
-	require.Equal(t, state.UpdateId, int64(1))
+	require.Equal(t, cp.Checkpoint, map[string][]byte{
+		"test": []byte("test"),
+	})
 }

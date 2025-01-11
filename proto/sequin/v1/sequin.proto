@@ -61,7 +61,7 @@ message OperationResult {
 
 message OperationState {
     int64 update_id = 1;
-    map<string, google.protobuf.Any> state = 2;
+    map<string, bytes> checkpoint = 2;
     bool done = 3;
 }
 
@@ -76,7 +76,7 @@ message GetRequest {
     // If provided, the server will block until there is a new update.
     // This changes the behavior of Get to be a long-polling operation.
     int64 last_update_id = 2;
-    OperationState state = 3;
+    OperationState checkpoint = 3;
 }
 
 message GetResponse {

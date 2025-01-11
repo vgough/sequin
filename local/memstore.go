@@ -15,9 +15,9 @@ type MemStore struct {
 var _ Store = &MemStore{}
 
 type opInfo struct {
-	def    *sequinv1.Operation
-	state  *sequinv1.OperationState
-	result *sequinv1.OperationResult
+	def        *sequinv1.Operation
+	checkpoint map[string][]byte
+	result     [][]byte
 }
 
 func NewMemStore() *MemStore {
@@ -32,7 +32,7 @@ func (s *MemStore) AddOperation(ctx context.Context,
 	defer s.mu.Unlock()
 
 	if _, ok := s.ops[req.RequestId]; ok {
-		return false, ErrOperationAlreadyExists
+		return false, nil
 	}
 
 	s.ops[req.RequestId] = &opInfo{
@@ -55,16 +55,21 @@ func (s *MemStore) GetOperation(ctx context.Context,
 
 func (s *MemStore) SetState(ctx context.Context,
 	requestID string,
-	state *sequinv1.OperationState) error {
+	state *OpState) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.ops[requestID].state = state
+	if state.Checkpoint != nil {
+		s.ops[requestID].checkpoint = state.Checkpoint
+	}
+	if state.Results != nil {
+		s.ops[requestID].result = state.Results
+	}
 	return nil
 }
 
 func (s *MemStore) GetState(ctx context.Context,
-	requestID string) (*sequinv1.OperationState, error) {
+	requestID string) (*OpState, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -72,27 +77,8 @@ func (s *MemStore) GetState(ctx context.Context,
 	if !ok {
 		return nil, ErrOperationNotFound
 	}
-	return op.state, nil
-}
-
-func (s *MemStore) SetResult(ctx context.Context,
-	requestID string,
-	result *sequinv1.OperationResult) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.ops[requestID].result = result
-	return nil
-}
-
-func (s *MemStore) GetResult(ctx context.Context,
-	requestID string) (bool, *sequinv1.OperationResult, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	op, ok := s.ops[requestID]
-	if !ok {
-		return false, nil, ErrOperationNotFound
-	}
-	return true, op.result, nil
+	return &OpState{
+		Checkpoint: op.checkpoint,
+		Results:    op.result,
+	}, nil
 }

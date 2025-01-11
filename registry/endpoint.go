@@ -15,10 +15,8 @@ var ErrEndpointNotFound = errors.New("endpoint not found")
 type FeatureFlag int
 
 const (
-	// FeatureCheckpoint enables checkpointing for the operation.
-	FeatureCheckpoint FeatureFlag = 1 << iota
 	// FeatureBackground enables automatic background execution for the operation.
-	FeatureBackground
+	FeatureBackground FeatureFlag = 1 << iota
 )
 
 // Endpoint stores information about a registered function.

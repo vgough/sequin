@@ -61,11 +61,6 @@ func GlobalID() RegisterOpt {
 	}
 }
 
-// UseCheckpoints enables checkpointing for the operation.
-func UseCheckpoints() RegisterOpt {
-	return enableFeatureFlag(registry.FeatureCheckpoint)
-}
-
 // AutoBackground enables automatic retry for the operation.
 // By default, the operation will only run in the foreground of the caller.
 // If AutoBackground is enabled, the operation will be retried in the background
