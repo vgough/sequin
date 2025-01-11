@@ -32,6 +32,17 @@ type Endpoint struct {
 	FeatureFlags  FeatureFlag    // Feature flags.
 
 	Metadata map[string]interface{} // Arbitrary metadata.
+
+	// TODO: optional configuration overrides when used as an embedded component
+	// rather than a top-level function.
+	Embedded *EmbeddedOverrides
+}
+
+func (ep *Endpoint) SetMetadata(key string, value interface{}) {
+	if ep.Metadata == nil {
+		ep.Metadata = make(map[string]interface{})
+	}
+	ep.Metadata[key] = value
 }
 
 func (ep *Endpoint) HasFeature(flag FeatureFlag) bool {
@@ -40,6 +51,22 @@ func (ep *Endpoint) HasFeature(flag FeatureFlag) bool {
 
 func (ep *Endpoint) EnableFeature(flag FeatureFlag) {
 	ep.FeatureFlags |= flag
+}
+
+type EmbeddedOverrides struct {
+	FeatureFlags FeatureFlag
+	Metadata     map[string]interface{}
+}
+
+func (eo *EmbeddedOverrides) EnableFeature(flag FeatureFlag) {
+	eo.FeatureFlags |= flag
+}
+
+func (eo *EmbeddedOverrides) SetMetadata(key string, value interface{}) {
+	if eo.Metadata == nil {
+		eo.Metadata = make(map[string]interface{})
+	}
+	eo.Metadata[key] = value
 }
 
 // NewEndpoint creates a new endpoint from a function.

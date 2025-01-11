@@ -44,14 +44,19 @@ func Register[T any](fn T, opts ...RegisterOpt) T {
 	return out
 }
 
+type EndpointConfig interface {
+	EnableFeature(flag registry.FeatureFlag)
+	SetMetadata(key string, value interface{})
+}
+
 // RegisterOpt is an option for Register.
-type RegisterOpt func(*registry.Endpoint) error
+type RegisterOpt func(EndpointConfig) error
 
 // GlobalID marks the function as having a globally unique ID.
 // The default is to scope the ID within any enclosing execution.
 func GlobalID() RegisterOpt {
-	return func(ep *registry.Endpoint) error {
-		ep.Metadata[internal.GlobalIDGen] = true
+	return func(ep EndpointConfig) error {
+		ep.SetMetadata(internal.GlobalIDGen, true)
 		return nil
 	}
 }
@@ -71,7 +76,7 @@ func AutoBackground() RegisterOpt {
 }
 
 func enableFeatureFlag(flag registry.FeatureFlag) RegisterOpt {
-	return func(ep *registry.Endpoint) error {
+	return func(ep EndpointConfig) error {
 		ep.EnableFeature(flag)
 		return nil
 	}
