@@ -14,11 +14,6 @@ var ErrEndpointNotFound = errors.New("endpoint not found")
 
 type FeatureFlag int
 
-const (
-	// FeatureBackground enables automatic background execution for the operation.
-	FeatureBackground FeatureFlag = 1 << iota
-)
-
 // Endpoint stores information about a registered function.
 type Endpoint struct {
 	Name          string
@@ -27,13 +22,8 @@ type Endpoint struct {
 	InputTypes    []reflect.Type // Argument types of the function.
 	OutputTypes   []reflect.Type // Return types of the function.
 	MethodBinding reflect.Value  // Fixed method to bind to calls.
-	FeatureFlags  FeatureFlag    // Feature flags.
 
 	Metadata map[string]interface{} // Arbitrary metadata.
-
-	// TODO: optional configuration overrides when used as an embedded component
-	// rather than a top-level function.
-	Embedded *EmbeddedOverrides
 }
 
 func (ep *Endpoint) SetMetadata(key string, value interface{}) {
@@ -41,30 +31,6 @@ func (ep *Endpoint) SetMetadata(key string, value interface{}) {
 		ep.Metadata = make(map[string]interface{})
 	}
 	ep.Metadata[key] = value
-}
-
-func (ep *Endpoint) HasFeature(flag FeatureFlag) bool {
-	return ep.FeatureFlags&flag != 0
-}
-
-func (ep *Endpoint) EnableFeature(flag FeatureFlag) {
-	ep.FeatureFlags |= flag
-}
-
-type EmbeddedOverrides struct {
-	FeatureFlags FeatureFlag
-	Metadata     map[string]interface{}
-}
-
-func (eo *EmbeddedOverrides) EnableFeature(flag FeatureFlag) {
-	eo.FeatureFlags |= flag
-}
-
-func (eo *EmbeddedOverrides) SetMetadata(key string, value interface{}) {
-	if eo.Metadata == nil {
-		eo.Metadata = make(map[string]interface{})
-	}
-	eo.Metadata[key] = value
 }
 
 // NewEndpoint creates a new endpoint from a function.

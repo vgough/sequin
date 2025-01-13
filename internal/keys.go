@@ -1,4 +1,4 @@
 package internal
 
-// GlobalIDGen is the key for the global ID generation option.
-const GlobalIDGen = "sequin.globalID"
+// ScopedIDKey is the key for the scoped ID generation option.
+const ScopedIDKey = "sequin.scopedID"

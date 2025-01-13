@@ -58,10 +58,10 @@ func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Val
 
 	// create unique id from data.
 	ctx := ep.GetContext(args)
-	parentID := requestIDMD.Get(ctx)
-	if opt, ok := ep.Metadata[internal.GlobalIDGen]; ok {
+	var parentID string
+	if opt, ok := ep.Metadata[internal.ScopedIDKey]; ok {
 		if boolVal, ok := opt.(bool); ok && boolVal {
-			parentID = ""
+			parentID = requestIDMD.Get(ctx)
 		}
 	}
 

@@ -45,34 +45,17 @@ func Register[T any](fn T, opts ...RegisterOpt) T {
 }
 
 type EndpointConfig interface {
-	EnableFeature(flag registry.FeatureFlag)
 	SetMetadata(key string, value interface{})
 }
 
 // RegisterOpt is an option for Register.
 type RegisterOpt func(EndpointConfig) error
 
-// GlobalID marks the function as having a globally unique ID.
-// The default is to scope the ID within any enclosing execution.
-func GlobalID() RegisterOpt {
+// ScopedID marks the function as having a scoped execution ID.
+// The ID is scoped to any enclosing execution's parent ID.
+func ScopedI() RegisterOpt {
 	return func(ep EndpointConfig) error {
-		ep.SetMetadata(internal.GlobalIDGen, true)
-		return nil
-	}
-}
-
-// AutoBackground enables automatic retry for the operation.
-// By default, the operation will only run in the foreground of the caller.
-// If AutoBackground is enabled, the operation will be retried in the background
-// even if the caller fails. The result of the operation will be returned to the
-// caller the next time the operation is called.
-func AutoBackground() RegisterOpt {
-	return enableFeatureFlag(registry.FeatureBackground)
-}
-
-func enableFeatureFlag(flag registry.FeatureFlag) RegisterOpt {
-	return func(ep EndpointConfig) error {
-		ep.EnableFeature(flag)
+		ep.SetMetadata(internal.ScopedIDKey, true)
 		return nil
 	}
 }
