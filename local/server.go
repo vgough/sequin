@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"reflect"
 
-	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/sync/singleflight"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -19,9 +18,10 @@ import (
 	"github.com/vgough/sequin/registry"
 )
 
-var encodingKey []byte = []byte("sequin")
+var encodingKey = []byte("sequin")
 var requestIDMD = internal.MDKey[string]{}
 
+// Server is a local runtime for running operations.
 type Server struct {
 	sf singleflight.Group
 
@@ -30,14 +30,17 @@ type Server struct {
 
 var _ sequin.Runtime = &Server{}
 
+// ServerOptions are options for configuring the server.
 type ServerOptions func(*Server)
 
+// WithStorage sets the storage backend for the server.
 func WithStorage(storage Store) ServerOptions {
 	return func(s *Server) {
 		s.storage = storage
 	}
 }
 
+// NewServer creates a new server with the given options.
 func NewServer(opts ...ServerOptions) *Server {
 	s := &Server{}
 	for _, opt := range opts {
@@ -49,6 +52,7 @@ func NewServer(opts ...ServerOptions) *Server {
 	return s
 }
 
+// Exec runs the given endpoint with the given arguments.
 func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Value {
 	// Marshal the arguments.
 	data, err := s.encodeValues(args)
@@ -84,18 +88,18 @@ func (s *Server) Exec(ep *registry.Endpoint, args []reflect.Value) []reflect.Val
 func (s *Server) runInternal(ctx context.Context, requestID string,
 	ep *registry.Endpoint, data [][]byte) ([][]byte, error) {
 
-	funcoOp := sequinv1.FuncOperation{
+	funcOp := sequinv1.FuncOperation{
 		Name: ep.Name,
 		Args: data,
 	}
-	any, err := anypb.New(&funcoOp)
+	detail, err := anypb.New(&funcOp)
 	if err != nil {
 		return nil, err
 	}
 
 	op := &sequinv1.Operation{
 		RequestId: requestID,
-		Detail:    any,
+		Detail:    detail,
 	}
 
 	created, err := s.storage.AddOperation(ctx, op)

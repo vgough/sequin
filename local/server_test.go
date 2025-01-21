@@ -21,7 +21,7 @@ func TestServer(t *testing.T) {
 
 var IsEven = sequin.Register(isEven)
 
-func isEven(ctx context.Context, in int) (bool, error) {
+func isEven(_ context.Context, in int) (bool, error) {
 	if in < 0 {
 		return false, errors.New("negative values not supported")
 	}

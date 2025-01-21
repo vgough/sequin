@@ -25,8 +25,10 @@ func GetRuntime(ctx context.Context) Runtime {
 	return runtimeMD.Get(ctx)
 }
 
+// OpRuntimeOpt is an option for configuring the operation runtime.
 type OpRuntimeOpt func(rt internal.OpRuntime) error
 
+// OpConfig configures the operation runtime.
 func OpConfig(ctx context.Context, opts ...OpRuntimeOpt) error {
 	rt := internal.GetOpRuntime(ctx)
 	if rt == nil {
@@ -40,6 +42,7 @@ func OpConfig(ctx context.Context, opts ...OpRuntimeOpt) error {
 	return nil
 }
 
+// Persist registers a state variable to be persisted.
 func Persist[T any](name string, state T) OpRuntimeOpt {
 	return func(rt internal.OpRuntime) error {
 		return rt.RegisterState(name, state)

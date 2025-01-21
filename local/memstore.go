@@ -1,3 +1,4 @@
+// Package local provides a local runtime for running operations.
 package local
 
 import (
@@ -7,6 +8,7 @@ import (
 	sequinv1 "github.com/vgough/sequin/gen/sequin/v1"
 )
 
+// MemStore is an in-memory store for operations.
 type MemStore struct {
 	mu  sync.Mutex
 	ops map[string]*opInfo
@@ -14,19 +16,22 @@ type MemStore struct {
 
 var _ Store = &MemStore{}
 
+// opInfo is the internal representation of an operation.
 type opInfo struct {
 	def    *sequinv1.Operation
 	state  *sequinv1.OperationState
 	result *sequinv1.OperationResult
 }
 
+// NewMemStore creates a new in-memory store for operations.
 func NewMemStore() *MemStore {
 	return &MemStore{
 		ops: make(map[string]*opInfo),
 	}
 }
 
-func (s *MemStore) AddOperation(ctx context.Context,
+// AddOperation adds a new operation to the store.
+func (s *MemStore) AddOperation(_ context.Context,
 	req *sequinv1.Operation) (created bool, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -41,7 +46,8 @@ func (s *MemStore) AddOperation(ctx context.Context,
 	return true, nil
 }
 
-func (s *MemStore) GetOperation(ctx context.Context,
+// GetOperation retrieves an operation from the store.
+func (s *MemStore) GetOperation(_ context.Context,
 	requestID string) (*sequinv1.Operation, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -53,7 +59,8 @@ func (s *MemStore) GetOperation(ctx context.Context,
 	return op.def, nil
 }
 
-func (s *MemStore) SetState(ctx context.Context,
+// SetState updates the state of an operation.
+func (s *MemStore) SetState(_ context.Context,
 	requestID string,
 	state *sequinv1.OperationState) error {
 	s.mu.Lock()
@@ -63,7 +70,8 @@ func (s *MemStore) SetState(ctx context.Context,
 	return nil
 }
 
-func (s *MemStore) GetState(ctx context.Context,
+// GetState retrieves the state of an operation.
+func (s *MemStore) GetState(_ context.Context,
 	requestID string) (*sequinv1.OperationState, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -75,7 +83,8 @@ func (s *MemStore) GetState(ctx context.Context,
 	return op.state, nil
 }
 
-func (s *MemStore) SetResult(ctx context.Context,
+// SetResult updates the result of an operation.
+func (s *MemStore) SetResult(_ context.Context,
 	requestID string,
 	result *sequinv1.OperationResult) error {
 	s.mu.Lock()
@@ -85,7 +94,8 @@ func (s *MemStore) SetResult(ctx context.Context,
 	return nil
 }
 
-func (s *MemStore) GetResult(ctx context.Context,
+// GetResult retrieves the result of an operation.
+func (s *MemStore) GetResult(_ context.Context,
 	requestID string) (bool, *sequinv1.OperationResult, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
